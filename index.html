@@ -370,27 +370,30 @@
 </head>
 <body>
 
+<audio id="wedding-music" loop>
+  <source src="music.mp3" type="audio/mpeg">
+  Browser Anda tidak mendukung elemen audio.
+</audio>
+
 <div class="music-toggle" id="musicToggle" title="Musik">♪</div>
 
-<!-- ENVELOPE SCREEN -->
 <div class="screen" id="envelope-screen">
   <div class="envelope-names">The Wedding Of</div>
   <div class="envelope-wrap" id="envelopeWrap">
     <div class="envelope-body"></div>
-    <div class="seal">T&nbsp;M</div>
+    <div class="seal">T M</div>
     <div class="flap"></div>
   </div>
   <div class="tap-hint">Sentuh Amplop Untuk Membuka</div>
 </div>
 
-<!-- MAIN CONTENT -->
 <div id="main-content">
 
   <section class="section" id="hero">
     <div class="eyebrow fade-up">Undangan Pernikahan</div>
     <div class="hero-names fade-up d1">
       Tiyo Wahyudi
-      <span class="amp">&amp;</span>
+      <span class="amp">&</span>
       Miftahul Jannah
     </div>
     <div class="gold-line wide fade-up d2"></div>
@@ -426,7 +429,7 @@
     </div>
 
     <div class="fade-up d4" style="width:100%;max-width:420px;">
-      <a class="map-link" href="https://www.google.com/maps?q=Monas+Jakarta" target="_blank" rel="noopener">📍 Buka Lokasi di Google Maps →</a>
+      <a class="map-link" href="http://maps.google.com/?q=The+Hermitage+Jakarta" target="_blank" rel="noopener">📍 Buka Lokasi di Google Maps →</a>
     </div>
   </section>
 
@@ -461,8 +464,8 @@
   </section>
 
   <footer>
-    <div class="amp-small">T &amp; M</div>
-    <p>Merupakan Kehormatan &amp; Kebahagiaan Bagi Kami<br>Apabila Bapak/Ibu/Saudara/i Berkenan Hadir</p>
+    <div class="amp-small">T & M</div>
+    <p>Merupakan Kehormatan & Kebahagiaan Bagi Kami<br>Apabila Bapak/Ibu/Saudara/i Berkenan Hadir</p>
   </footer>
 
 </div>
@@ -473,7 +476,7 @@
   const envScreen = document.getElementById('envelope-screen');
   const mainContent = document.getElementById('main-content');
   const musicToggle = document.getElementById('musicToggle');
-  const weddingMusic = document.getElementById('wedding-music'); // Ambil elemen audio
+  const weddingMusic = document.getElementById('wedding-music');
 
   let musicOn = false;
 
@@ -481,7 +484,7 @@
   envScreen.addEventListener('click', () => {
     envWrap.classList.add('open');
     
-    // Putar musik tepat saat amplop diklik (Aman dari autoplay block browser)
+    // Putar musik tepat saat amplop diklik
     weddingMusic.play().then(() => {
       musicOn = true;
       musicToggle.textContent = '❚❚';
