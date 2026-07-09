@@ -468,28 +468,57 @@
 </div>
 
 <script>
-  // Open envelope
+  // Inisialisasi Element
   const envWrap = document.getElementById('envelopeWrap');
   const envScreen = document.getElementById('envelope-screen');
   const mainContent = document.getElementById('main-content');
   const musicToggle = document.getElementById('musicToggle');
+  const weddingMusic = document.getElementById('wedding-music'); // Ambil elemen audio
 
+  let musicOn = false;
+
+  // Fungsi Buka Amplop + Putar Musik
   envScreen.addEventListener('click', () => {
     envWrap.classList.add('open');
+    
+    // Putar musik tepat saat amplop diklik (Aman dari autoplay block browser)
+    weddingMusic.play().then(() => {
+      musicOn = true;
+      musicToggle.textContent = '❚❚';
+      musicToggle.style.opacity = '1';
+    }).catch(err => {
+      console.log("Audio gagal berputar otomatis:", err);
+    });
+
     setTimeout(() => {
       envScreen.style.opacity = '0';
       setTimeout(() => {
         envScreen.style.display = 'none';
         mainContent.style.display = 'flex';
         musicToggle.style.display = 'flex';
-        // retrigger animations
-        document.querySelectorAll('.fade-up, .eyebrow').forEach(el=>{
+        
+        // Retrigger animations
+        document.querySelectorAll('.fade-up, .eyebrow').forEach(el => {
           el.style.animation = 'none';
           el.offsetHeight;
           el.style.animation = null;
         });
       }, 800);
     }, 900);
+  });
+
+  // Fungsi Tombol Play/Pause Musik Kontrol
+  musicToggle.addEventListener('click', () => {
+    if (musicOn) {
+      weddingMusic.pause();
+      musicToggle.textContent = '♪';
+      musicToggle.style.opacity = '0.7';
+    } else {
+      weddingMusic.play().catch(err => console.log(err));
+      musicToggle.textContent = '❚❚';
+      musicToggle.style.opacity = '1';
+    }
+    musicOn = !musicOn;
   });
 
   // Countdown
@@ -537,14 +566,6 @@
     }catch(err){
       status.textContent = 'Gagal mengirim, silakan coba lagi.';
     }
-  });
-
-  // Music toggle placeholder (no audio source loaded yet)
-  let musicOn = false;
-  musicToggle.addEventListener('click', () => {
-    musicOn = !musicOn;
-    musicToggle.textContent = musicOn ? '❚❚' : '♪';
-    musicToggle.style.opacity = musicOn ? '1' : '0.7';
   });
 </script>
 
