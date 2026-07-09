@@ -480,19 +480,23 @@
 
   let musicOn = false;
 
-  // Fungsi Buka Amplop + Putar Musik
+  // Fungsi Buka Amplop + Putar Musik (Diperbaiki logikanya)
   envScreen.addEventListener('click', () => {
+    // 1. Jalankan animasi amplop terbuka terlebih dahulu
     envWrap.classList.add('open');
     
-    // Putar musik tepat saat amplop diklik
-    weddingMusic.play().then(() => {
-      musicOn = true;
-      musicToggle.textContent = '❚❚';
-      musicToggle.style.opacity = '1';
-    }).catch(err => {
-      console.log("Audio gagal berputar otomatis:", err);
-    });
+    // 2. Beri jeda 100ms agar interaksi klik terdaftar sepenuhnya oleh browser baru putar musik
+    setTimeout(() => {
+      weddingMusic.play().then(() => {
+        musicOn = true;
+        musicToggle.textContent = '❚❚';
+        musicToggle.style.opacity = '1';
+      }).catch(err => {
+        console.log("Audio diblokir atau file tidak ditemukan:", err);
+      });
+    }, 100);
 
+    // 3. Animasi transisi halaman utama
     setTimeout(() => {
       envScreen.style.opacity = '0';
       setTimeout(() => {
@@ -500,7 +504,7 @@
         mainContent.style.display = 'flex';
         musicToggle.style.display = 'flex';
         
-        // Retrigger animations
+        // Retrigger animations untuk konten utama
         document.querySelectorAll('.fade-up, .eyebrow').forEach(el => {
           el.style.animation = 'none';
           el.offsetHeight;
@@ -511,13 +515,14 @@
   });
 
   // Fungsi Tombol Play/Pause Musik Kontrol
-  musicToggle.addEventListener('click', () => {
+  musicToggle.addEventListener('click', (e) => {
+    e.stopPropagation(); // Mencegah efek klik ganda pada layer belakang
     if (musicOn) {
       weddingMusic.pause();
       musicToggle.textContent = '♪';
       musicToggle.style.opacity = '0.7';
     } else {
-      weddingMusic.play().catch(err => console.log(err));
+      weddingMusic.play().catch(err => console.log("Gagal play:", err));
       musicToggle.textContent = '❚❚';
       musicToggle.style.opacity = '1';
     }
@@ -571,6 +576,5 @@
     }
   });
 </script>
-
 </body>
 </html>
