@@ -371,7 +371,7 @@
 <body>
 
 <audio id="wedding-music" loop>
-  <source src="https://commons.wikimedia.org/wiki/Special:FilePath/Chopin_Nocturne_No._2_in_E_Flat_Major,_Op._9.ogg" type="audio/ogg">
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
   Browser Anda tidak mendukung elemen audio.
 </audio>
 
@@ -480,12 +480,10 @@
 
   let musicOn = false;
 
-  // Fungsi Buka Amplop + Putar Musik (Diperbaiki logikanya)
+  // Fungsi Buka Amplop + Putar Musik dengan Logic Delay Fix
   envScreen.addEventListener('click', () => {
-    // 1. Jalankan animasi amplop terbuka terlebih dahulu
     envWrap.classList.add('open');
     
-    // 2. Beri jeda 100ms agar interaksi klik terdaftar sepenuhnya oleh browser baru putar musik
     setTimeout(() => {
       weddingMusic.play().then(() => {
         musicOn = true;
@@ -496,7 +494,6 @@
       });
     }, 100);
 
-    // 3. Animasi transisi halaman utama
     setTimeout(() => {
       envScreen.style.opacity = '0';
       setTimeout(() => {
@@ -504,7 +501,6 @@
         mainContent.style.display = 'flex';
         musicToggle.style.display = 'flex';
         
-        // Retrigger animations untuk konten utama
         document.querySelectorAll('.fade-up, .eyebrow').forEach(el => {
           el.style.animation = 'none';
           el.offsetHeight;
@@ -516,7 +512,7 @@
 
   // Fungsi Tombol Play/Pause Musik Kontrol
   musicToggle.addEventListener('click', (e) => {
-    e.stopPropagation(); // Mencegah efek klik ganda pada layer belakang
+    e.stopPropagation();
     if (musicOn) {
       weddingMusic.pause();
       musicToggle.textContent = '♪';
@@ -550,29 +546,52 @@
   updateCountdown();
   setInterval(updateCountdown, 1000);
 
-  // RSVP -> persistent shared storage
+  // RSVP -> PENGIRIMAN LANGSUNG KE GOOGLE SHEETS VIA FETCH INTERACTION
   const form = document.getElementById('rsvpForm');
   const status = document.getElementById('rsvpStatus');
+  
+  // ⚠️ MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI ANTARA TANDA PETIK DI BAWAH INI:
+  const SCRIPT_URL = 'MASUKKAN_URL_WEB_APP_SCRIPT_ANDA_DI_SINI';
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    const submitBtn = form.querySelector('.submit-btn');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = 'Mengirim...';
+    submitBtn.disabled = true;
+
     const entry = {
       name: document.getElementById('rsvpName').value,
       attend: document.getElementById('rsvpAttend').value,
       guests: document.getElementById('rsvpGuests').value || '1',
       message: document.getElementById('rsvpMsg').value,
-      time: new Date().toISOString()
+      time: new Date().toLocaleString('id-ID')
     };
-    try{
-      const key = 'rsvp:' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
-      const result = await window.storage.set(key, JSON.stringify(entry), true);
-      if(result){
-        status.textContent = 'Terima kasih, ' + entry.name + '! Konfirmasi Anda telah kami terima. 🤍';
+
+    try {
+      const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(entry)
+      });
+      
+      const result = await response.json();
+      
+      if(result.result === 'success') {
+        status.textContent = 'Terima kasih, ' + entry.name + '! Konfirmasi Anda telah disimpan di Google Sheets. 🤍';
+        status.style.color = '#e8d9a8';
         form.reset();
       } else {
-        status.textContent = 'Gagal mengirim, silakan coba lagi.';
+        status.textContent = 'Gagal menyimpan, periksa setelan web app Anda.';
+        status.style.color = '#ff4a4a';
       }
-    }catch(err){
-      status.textContent = 'Gagal mengirim, silakan coba lagi.';
+    } catch(err) {
+      console.error(err);
+      status.textContent = 'Terjadi kesalahan jaringan, silakan coba kembali.';
+      status.style.color = '#ff4a4a';
+    } finally {
+      submitBtn.textContent = originalBtnText;
+      submitBtn.disabled = false;
     }
   });
 </script>
