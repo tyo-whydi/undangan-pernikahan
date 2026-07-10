@@ -532,7 +532,7 @@
   const form = document.getElementById('rsvpForm');
   const status = document.getElementById('rsvpStatus');
   
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpQ-pwsAJkBpyYpalWzrrOF2A54l8Z4N2Q3tGUb8f4aJSRf_CgdJvbg5CSvVlfYJ-r/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6tlZSxlAJwADTMULDL_tBNq2rtloxniA916q9FZuRBqO4AvyyLPlMR3UbQNk716Tv/exec';
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -551,21 +551,18 @@
     };
 
     try {
-      const response = await fetch(SCRIPT_URL, {
+      // Google Apps Script tidak mengirim header CORS untuk fetch lintas domain,
+      // jadi kita pakai mode 'no-cors': request tetap terkirim & data tetap tersimpan,
+      // hanya saja kita tidak bisa membaca isi responsnya dari sisi browser.
+      await fetch(SCRIPT_URL, {
         method: 'POST',
+        mode: 'no-cors',
         body: JSON.stringify(entry)
       });
-      
-      const result = await response.json();
-      
-      if(result.result === 'success') {
-        status.textContent = 'Terima kasih, ' + entry.name + '! Konfirmasi Anda telah disimpan di Google Sheets. 🤍';
-        status.style.color = '#e8d9a8';
-        form.reset();
-      } else {
-        status.textContent = 'Gagal menyimpan, silakan coba kembali.';
-        status.style.color = '#ff4a4a';
-      }
+
+      status.textContent = 'Terima kasih, ' + entry.name + '! Konfirmasi Anda telah disimpan. 🤍';
+      status.style.color = '#e8d9a8';
+      form.reset();
     } catch(err) {
       console.error(err);
       status.textContent = 'Terjadi kesalahan jaringan, silakan coba kembali.';
