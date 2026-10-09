@@ -794,7 +794,7 @@ select option{background:#141414;}
     </details>
 
     <details class="admin-section">
-      <summary>📞 Kontak, WhatsApp & Email</summary>
+      <summary>📞 Kontak, WhatsApp, Email & RSVP</summary>
       <div class="admin-fields">
         <div class="admin-field">
           <label>Nomor WhatsApp (untuk link)</label>
@@ -809,6 +809,7 @@ select option{background:#141414;}
         <div class="admin-field">
           <label>Alamat Email</label>
           <input type="email" data-bind="email" placeholder="nama@email.com">
+          <div class="hint">RSVP akan dikirim ke email ini juga (via FormSubmit).</div>
         </div>
         <div class="admin-field">
           <label>Subjek Email Default</label>
@@ -816,9 +817,9 @@ select option{background:#141414;}
           <div class="hint">Subjek otomatis saat tamu klik "Kirim Email".</div>
         </div>
         <div class="admin-field">
-          <label>Google Apps Script URL (RSVP)</label>
+          <label>Google Apps Script URL (untuk RSVP ke Sheet)</label>
           <input type="url" data-bind="scriptURL" placeholder="https://script.google.com/macros/s/...">
-          <div class="hint">Kosongkan jika tidak pakai (fallback ke WhatsApp).</div>
+          <div class="hint">Kalau diisi: RSVP masuk ke Google Sheet. Kalau email juga diisi: RSVP masuk ke dua-duanya (Sheet + Email).</div>
         </div>
       </div>
     </details>
@@ -882,14 +883,6 @@ select option{background:#141414;}
 
 /* ============================================================
    🔐 PASSWORD PANEL ADMIN — GANTI DI SINI
-   ============================================================
-   Ubah string di bawah ini menjadi kata sandi pilihan Anda.
-   Contoh: 'rahasiaku2026', 'TiyoMiftah2026', dll.
-
-   PENTING:
-   - Password ini berlaku di SEMUA perangkat (hardcode).
-   - Tidak ada tamu yang bisa membuat password sendiri.
-   - Setelah ganti, simpan file & upload ulang.
    ============================================================ */
 const OWNER_PASSWORD = 'tiyo2026';
 
@@ -937,7 +930,7 @@ const DEFAULT_DATA = {
 
   waNumber: '6281234567890',
   waDisplay: '+62 812-3456-7890',
-  email: 'email@contoh.com',
+  email: '',
   emailSubject: 'Undangan Pernikahan Tiyo & Miftahul',
   scriptURL: '',
 
@@ -1389,7 +1382,13 @@ attachCopy(document.getElementById('waCopy'));
 attachCopy(document.getElementById('emailCopy'));
 
 /* ============================================================
-   16. RSVP
+   16. RSVP — Kirim ke Google Sheet DAN Email sekaligus
+   ============================================================
+   Cara kerja:
+   - Kalau scriptURL diisi  → kirim ke Google Sheet
+   - Kalau email diisi      → kirim ke email via FormSubmit
+   - Kalau dua-duanya diisi → kirim ke KEDUANYA (backup ganda)
+   - Kalau dua-duanya kosong → fallback ke WhatsApp
    ============================================================ */
 const form = document.getElementById('rsvpForm');
 const statusEl = document.getElementById('rStatus');
@@ -1397,23 +1396,15 @@ const submit = document.getElementById('rSubmit');
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
-  const name = document.getElementById('rName').value.trim();
+
+  const name   = document.getElementById('rName').value.trim();
   const attend = document.getElementById('rAttend').value;
   const guests = document.getElementById('rGuests').value || '1';
-  const msg = document.getElementById('rMsg').value.trim();
+  const msg    = document.getElementById('rMsg').value.trim();
 
   if (!name || !attend){
     statusEl.textContent = 'Mohon lengkapi nama dan konfirmasi kehadiran.';
     statusEl.classList.add('err');
-    return;
-  }
-
-  const url = DATA.scriptURL || '';
-  if (!url){
-    const text = `Konfirmasi Kehadiran:\nNama: ${name}\nKehadiran: ${attend}\nJumlah Tamu: ${guests}\nUcapan: ${msg}`;
-    window.open(`https://wa.me/${DATA.waNumber}?text=${encodeURIComponent(text)}`, '_blank');
-    statusEl.textContent = 'Membuka WhatsApp...';
-    statusEl.classList.remove('err');
     return;
   }
 
@@ -1423,22 +1414,87 @@ form.addEventListener('submit', async e => {
   const orig = submit.textContent;
   submit.textContent = 'Mengirim...';
 
-  try{
-    await fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ name, attend, guests, message: msg, time: new Date().toLocaleString('id-ID') })
-    });
-    statusEl.textContent = `Terima kasih, ${name}! Konfirmasi Anda telah kami terima. 🤍`;
-    form.reset();
-  } catch(err){
-    statusEl.textContent = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
-    statusEl.classList.add('err');
-  } finally {
+  const timeStr = new Date().toLocaleString('id-ID', {
+    dateStyle: 'full', timeStyle: 'short', timeZone: 'Asia/Jakarta'
+  });
+
+  const hasSheet = !!DATA.scriptURL;
+  const hasEmail = !!DATA.email;
+
+  // Kalau dua-duanya kosong → WhatsApp fallback
+  if (!hasSheet && !hasEmail){
+    const text = `Konfirmasi Kehadiran:\nNama: ${name}\nKehadiran: ${attend}\nJumlah Tamu: ${guests}\nUcapan: ${msg}`;
+    window.open(`https://wa.me/${DATA.waNumber}?text=${encodeURIComponent(text)}`, '_blank');
+    statusEl.textContent = 'Membuka WhatsApp...';
     submit.disabled = false;
     submit.textContent = orig;
+    return;
   }
+
+  let sheetOK = false;
+  let emailOK = false;
+
+  // === Kirim ke Google Sheet ===
+  if (hasSheet){
+    try {
+      await fetch(DATA.scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ name, attend, guests, message: msg, time: timeStr })
+      });
+      // mode no-cors → asumsikan sukses kalau tidak throw
+      sheetOK = true;
+    } catch (err){
+      console.error('Gagal kirim ke Sheet:', err);
+    }
+  }
+
+  // === Kirim ke Email via FormSubmit ===
+  if (hasEmail){
+    try {
+      const payload = {
+        _subject: `RSVP: ${name} — ${attend}`,
+        _template: 'table',
+        _captcha: 'false',
+        'Nama Tamu': name,
+        'Konfirmasi Kehadiran': attend,
+        'Jumlah Tamu': guests,
+        'Ucapan & Doa': msg || '(tidak ada pesan)',
+        'Waktu Kirim': timeStr
+      };
+
+      const res = await fetch(
+        `https://formsubmit.co/ajax/${encodeURIComponent(DATA.email)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (res.ok) emailOK = true;
+      else console.warn('FormSubmit response tidak OK:', res.status);
+    } catch (err){
+      console.error('Gagal kirim ke Email:', err);
+    }
+  }
+
+  // === Tampilkan status ke tamu ===
+  if ((hasSheet && sheetOK) || (hasEmail && emailOK)){
+    statusEl.textContent = `Terima kasih, ${name}! Konfirmasi Anda telah kami terima. 🤍`;
+    statusEl.classList.remove('err');
+    form.reset();
+  } else {
+    statusEl.textContent = 'Gagal mengirim. Silakan coba lagi atau hubungi kami via WhatsApp.';
+    statusEl.classList.add('err');
+  }
+
+  submit.disabled = false;
+  submit.textContent = orig;
 });
 
 /* ============================================================
@@ -1477,9 +1533,7 @@ const pwdInput = document.getElementById('pwdInput');
 const pwdErr = document.getElementById('pwdErr');
 const pwdOk = document.getElementById('pwdOk');
 const pwdCancel = document.getElementById('pwdCancel');
-const pwdHint = document.getElementById('pwdHint');
 
-/* --- Unlock state: sessionStorage (auto-lock saat tab/browser ditutup) --- */
 const SESSION_UNLOCK_KEY = 'undangan-unlocked-session';
 
 function isUnlocked(){
@@ -1493,7 +1547,6 @@ function setUnlocked(v){
   } catch(e){}
 }
 
-/* --- Anti brute-force --- */
 let failedAttempts = 0;
 let lockUntil = 0;
 
@@ -1561,7 +1614,6 @@ pwdOk.addEventListener('click', () => {
   }
 });
 
-/* --- Toggle admin: cek password --- */
 adminToggle.addEventListener('click', () => {
   if (isUnlocked()) adminPanel.classList.add('open');
   else openPwd();
