@@ -213,7 +213,7 @@ a{color:inherit;text-decoration:none;}
 .gift-copy:hover,.gift-copy:active{background:var(--gold);color:#1a1405;}
 .gift-copy.done{background:var(--gold);color:#1a1405;}
 
-/* ============ CONTACT (NEW) ============ */
+/* ============ CONTACT ============ */
 #contact{background:var(--black-2);}
 .contact-list{display:grid;gap:18px;width:100%;max-width:420px;margin-top:26px;}
 .contact-card{border:1px solid var(--line);border-radius:5px;padding:22px 20px;background:linear-gradient(160deg,rgba(201,162,75,.07),transparent 70%);text-align:left;display:flex;gap:16px;align-items:flex-start;}
@@ -271,6 +271,7 @@ select option{background:#141414;}
 .pwd-btns button{flex:1;padding:12px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--gold-light);font-size:12px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;text-indent:.18em;}
 .pwd-btns button.primary{background:var(--gold);color:#1a1405;border-color:var(--gold);}
 .pwd-btns button:active{filter:brightness(1.1);}
+.pwd-btns button:disabled{opacity:.4;cursor:not-allowed;}
 .pwd-hint{font-size:11px;color:#6f6a5f;margin-top:14px;line-height:1.5;}
 
 /* ============ ADMIN PANEL ============ */
@@ -562,7 +563,7 @@ select option{background:#141414;}
     </div>
   </section>
 
-  <!-- CONTACT (NEW) -->
+  <!-- CONTACT -->
   <section class="section" id="contact">
     <div class="eyebrow reveal">Hubungi Kami</div>
     <h2 class="title reveal" style="--d:.08s">Kontak</h2>
@@ -792,7 +793,6 @@ select option{background:#141414;}
       </div>
     </details>
 
-    <!-- KONTAK & EMAIL (UPDATED) -->
     <details class="admin-section">
       <summary>📞 Kontak, WhatsApp & Email</summary>
       <div class="admin-fields">
@@ -848,7 +848,6 @@ select option{background:#141414;}
     <button id="adminExport">📤 Ekspor</button>
     <button id="adminImport">📥 Impor</button>
     <button id="adminReset">↺ Reset</button>
-    <button id="adminChangePwd">🔑 Sandi</button>
     <button id="adminLock">🔒 Kunci</button>
     <button class="primary" id="adminDone">✓ Selesai</button>
   </div>
@@ -863,13 +862,13 @@ select option{background:#141414;}
         <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
       </svg>
     </div>
-    <div class="pwd-title" id="pwdTitle">Masukkan Kata Sandi</div>
-    <div class="pwd-sub" id="pwdSub">Hanya pemilik undangan yang dapat mengakses pengaturan.</div>
+    <div class="pwd-title">Panel Admin</div>
+    <div class="pwd-sub">Masukkan kata sandi untuk mengakses pengaturan undangan.</div>
     <input type="password" class="pwd-input" id="pwdInput" placeholder="• • • • • •" autocomplete="off">
     <div class="pwd-err" id="pwdErr"></div>
     <div class="pwd-btns">
       <button id="pwdCancel">Batal</button>
-      <button class="primary" id="pwdOk">Lanjut</button>
+      <button class="primary" id="pwdOk">Buka</button>
     </div>
     <div class="pwd-hint" id="pwdHint"></div>
   </div>
@@ -880,6 +879,19 @@ select option{background:#141414;}
 <script>
 (function(){
 'use strict';
+
+/* ============================================================
+   🔐 PASSWORD PANEL ADMIN — GANTI DI SINI
+   ============================================================
+   Ubah string di bawah ini menjadi kata sandi pilihan Anda.
+   Contoh: 'rahasiaku2026', 'TiyoMiftah2026', dll.
+
+   PENTING:
+   - Password ini berlaku di SEMUA perangkat (hardcode).
+   - Tidak ada tamu yang bisa membuat password sendiri.
+   - Setelah ganti, simpan file & upload ulang.
+   ============================================================ */
+const OWNER_PASSWORD = 'tiyo2026';
 
 /* ============================================================
    1. DATA DEFAULT
@@ -923,7 +935,6 @@ const DEFAULT_DATA = {
   musicType: 'default',
   musicUrl: '',
 
-  // KONTAK
   waNumber: '6281234567890',
   waDisplay: '+62 812-3456-7890',
   email: 'email@contoh.com',
@@ -1137,7 +1148,7 @@ function updateCalendarLink(){
 }
 
 /* ============================================================
-   7. WA LINK & CONTACT SECTION (UPDATED)
+   7. WA & CONTACT
    ============================================================ */
 function updateWALink(){
   const wa = document.getElementById('waLink');
@@ -1149,7 +1160,6 @@ function updateWALink(){
 }
 
 function updateContactSection(){
-  // WhatsApp card
   const waCard = document.getElementById('waCard');
   const waDisplayEl = document.getElementById('waDisplay');
   const waBtn = document.getElementById('waBtn');
@@ -1166,7 +1176,6 @@ function updateContactSection(){
     waCard.style.display = 'none';
   }
 
-  // Email card
   const emailCard = document.getElementById('emailCard');
   const emailDisplayEl = document.getElementById('emailDisplay');
   const emailBtn = document.getElementById('emailBtn');
@@ -1460,125 +1469,113 @@ function toast(msg){
 }
 
 /* ============================================================
-   19. ADMIN PANEL + PASSWORD
+   19. ADMIN PANEL + PASSWORD GATE
    ============================================================ */
 const adminPanel = document.getElementById('adminPanel');
-
-const PWD_HASH_KEY = 'undangan-pwd-hash';
-const UNLOCK_KEY   = 'undangan-unlocked';
-
-async function hashPwd(str){
-  if (window.crypto && crypto.subtle){
-    const buf = new TextEncoder().encode(str + '::undangan-salt');
-    const hash = await crypto.subtle.digest('SHA-256', buf);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-  let h = 0;
-  const s = str + '::undangan-salt';
-  for (let i = 0; i < s.length; i++){ h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; }
-  return 'fb_' + h;
-}
-const getStoredHash = () => { try{ return localStorage.getItem(PWD_HASH_KEY); }catch(e){ return null; } };
-const setStoredHash = h => { try{ localStorage.setItem(PWD_HASH_KEY, h); }catch(e){} };
-const isUnlocked    = () => { try{ return localStorage.getItem(UNLOCK_KEY) === '1'; }catch(e){ return false; } };
-const setUnlocked   = v => { try{ localStorage.setItem(UNLOCK_KEY, v ? '1' : '0'); }catch(e){} };
-
 const pwdOverlay = document.getElementById('pwdOverlay');
-const pwdTitle   = document.getElementById('pwdTitle');
-const pwdSub     = document.getElementById('pwdSub');
-const pwdInput   = document.getElementById('pwdInput');
-const pwdErr     = document.getElementById('pwdErr');
-const pwdHint    = document.getElementById('pwdHint');
-const pwdOk      = document.getElementById('pwdOk');
-const pwdCancel  = document.getElementById('pwdCancel');
+const pwdInput = document.getElementById('pwdInput');
+const pwdErr = document.getElementById('pwdErr');
+const pwdOk = document.getElementById('pwdOk');
+const pwdCancel = document.getElementById('pwdCancel');
+const pwdHint = document.getElementById('pwdHint');
 
-let pwdMode = 'login';
+/* --- Unlock state: sessionStorage (auto-lock saat tab/browser ditutup) --- */
+const SESSION_UNLOCK_KEY = 'undangan-unlocked-session';
 
-function openPwd(mode){
-  pwdMode = mode;
+function isUnlocked(){
+  try{ return sessionStorage.getItem(SESSION_UNLOCK_KEY) === '1'; }
+  catch(e){ return false; }
+}
+function setUnlocked(v){
+  try{
+    if (v) sessionStorage.setItem(SESSION_UNLOCK_KEY, '1');
+    else sessionStorage.removeItem(SESSION_UNLOCK_KEY);
+  } catch(e){}
+}
+
+/* --- Anti brute-force --- */
+let failedAttempts = 0;
+let lockUntil = 0;
+
+function openPwd(){
   pwdErr.textContent = '';
   pwdInput.value = '';
   pwdOverlay.classList.add('show');
 
-  if (mode === 'setup'){
-    pwdTitle.textContent = 'Buat Kata Sandi Baru';
-    pwdSub.textContent = 'Kata sandi ini akan melindungi akses ke panel pengaturan. Simpan di tempat aman.';
-    pwdHint.textContent = 'Minimal 4 karakter.';
-    pwdOk.textContent = 'Simpan';
-  } else if (mode === 'change'){
-    pwdTitle.textContent = 'Ganti Kata Sandi';
-    pwdSub.textContent = 'Masukkan kata sandi baru untuk panel pengaturan.';
-    pwdHint.textContent = 'Minimal 4 karakter.';
-    pwdOk.textContent = 'Simpan';
-  } else if (mode === 'verify-old'){
-    pwdTitle.textContent = 'Verifikasi Kata Sandi Lama';
-    pwdSub.textContent = 'Masukkan kata sandi saat ini untuk melanjutkan.';
-    pwdHint.textContent = '';
-    pwdOk.textContent = 'Verifikasi';
+  if (Date.now() < lockUntil){
+    const sisa = Math.ceil((lockUntil - Date.now()) / 1000);
+    pwdErr.textContent = `Terlalu banyak percobaan. Coba lagi dalam ${sisa} detik.`;
+    pwdOk.disabled = true;
+    pwdInput.disabled = true;
+    setTimeout(() => {
+      pwdOk.disabled = false;
+      pwdInput.disabled = false;
+      pwdErr.textContent = '';
+      pwdInput.focus();
+    }, lockUntil - Date.now());
   } else {
-    pwdTitle.textContent = 'Masukkan Kata Sandi';
-    pwdSub.textContent = 'Hanya pemilik undangan yang dapat mengakses pengaturan.';
-    pwdHint.textContent = '';
-    pwdOk.textContent = 'Buka';
+    pwdOk.disabled = false;
+    pwdInput.disabled = false;
+    setTimeout(() => pwdInput.focus(), 300);
   }
-  setTimeout(() => pwdInput.focus(), 300);
 }
-function closePwd(){ pwdOverlay.classList.remove('show'); pwdInput.value = ''; pwdErr.textContent = ''; }
+function closePwd(){
+  pwdOverlay.classList.remove('show');
+  pwdInput.value = '';
+  pwdErr.textContent = '';
+}
 
 pwdCancel.addEventListener('click', closePwd);
 pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') pwdOk.click(); });
 
-pwdOk.addEventListener('click', async () => {
+pwdOk.addEventListener('click', () => {
   const val = pwdInput.value.trim();
   if (!val){ pwdErr.textContent = 'Kata sandi tidak boleh kosong.'; return; }
-  if ((pwdMode === 'setup' || pwdMode === 'change') && val.length < 4){
-    pwdErr.textContent = 'Minimal 4 karakter.'; return;
-  }
 
-  const h = await hashPwd(val);
-
-  if (pwdMode === 'setup' || pwdMode === 'change'){
-    setStoredHash(h);
+  if (val === OWNER_PASSWORD){
+    failedAttempts = 0;
     setUnlocked(true);
     closePwd();
-    toast('Kata sandi tersimpan ✓');
     adminPanel.classList.add('open');
-    return;
-  }
-
-  const stored = getStoredHash();
-  if (h === stored){
-    closePwd();
-    if (pwdMode === 'verify-old'){
-      setTimeout(() => openPwd('change'), 220);
-    } else {
-      setUnlocked(true);
-      adminPanel.classList.add('open');
-    }
+    toast('Selamat datang ✓');
   } else {
-    pwdErr.textContent = 'Kata sandi salah.';
+    failedAttempts++;
     pwdInput.value = '';
     pwdInput.focus();
+
+    if (failedAttempts >= 5){
+      lockUntil = Date.now() + 30000;
+      failedAttempts = 0;
+      pwdErr.textContent = 'Terlalu banyak percobaan. Tunggu 30 detik.';
+      pwdOk.disabled = true;
+      pwdInput.disabled = true;
+      setTimeout(() => {
+        pwdOk.disabled = false;
+        pwdInput.disabled = false;
+        pwdErr.textContent = '';
+        pwdInput.focus();
+      }, 30000);
+    } else {
+      pwdErr.textContent = `Kata sandi salah. (${failedAttempts}/5 percobaan)`;
+    }
   }
 });
 
+/* --- Toggle admin: cek password --- */
 adminToggle.addEventListener('click', () => {
-  const stored = getStoredHash();
-  if (!stored) openPwd('setup');
-  else if (isUnlocked()) adminPanel.classList.add('open');
-  else openPwd('login');
+  if (isUnlocked()) adminPanel.classList.add('open');
+  else openPwd();
 });
 
 document.getElementById('adminClose').addEventListener('click', () => adminPanel.classList.remove('open'));
-document.getElementById('adminChangePwd').addEventListener('click', () => openPwd('verify-old'));
+document.getElementById('adminDone').addEventListener('click', () => {
+  adminPanel.classList.remove('open');
+  toast('Pengaturan tersimpan ✓');
+});
 document.getElementById('adminLock').addEventListener('click', () => {
   setUnlocked(false);
   adminPanel.classList.remove('open');
   toast('Panel dikunci 🔒');
-});
-document.getElementById('adminDone').addEventListener('click', () => {
-  adminPanel.classList.remove('open');
-  toast('Pengaturan tersimpan ✓');
 });
 
 /* --- Sync admin form --- */
