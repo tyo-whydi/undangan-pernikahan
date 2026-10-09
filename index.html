@@ -993,3 +993,1020 @@ const OWNER_PASSWORD = 'tiyo2026';
 /* ============================================================
    1. DATA DEFAULT
    ============================================================ */
+const DEFAULT_DATA = {
+  theme: 'dark',
+
+  groomShort: 'Tiyo',
+  groomName: 'Tiyo Wahyudi',
+  groomParents: 'Putra dari Bapak H. Sutrisno & Ibu Hj. Sri Wahyuni',
+  groomPhoto: 'https://picsum.photos/seed/groomportrait/400/400',
+
+  brideShort: 'Miftahul',
+  brideName: 'Miftahul Jannah',
+  brideParents: 'Putri dari Bapak H. Abdul Karim & Ibu Hj. Nur Aisyah',
+  bridePhoto: 'https://picsum.photos/seed/brideportrait/400/400',
+
+  weddingDateISO: '2026-12-20T08:00',
+  weddingDateText: 'Sabtu, 20 Desember 2026',
+
+  akadDay: 'Sabtu',
+  akadDate: '20 Desember 2026',
+  akadTime: '08.00 – 10.00 WIB',
+  akadPlace: 'Kediaman Mempelai Wanita',
+  akadAddress: 'Jl. Melati No. 12, Jakarta Selatan',
+
+  resepsiDay: 'Sabtu',
+  resepsiDate: '20 Desember 2026',
+  resepsiTime: '11.00 – 14.00 WIB',
+  resepsiPlace: 'The Hermitage Ballroom',
+  resepsiAddress: 'Jl. Cacap No. 1, Jakarta Pusat',
+
+  mapsUrl: 'https://maps.google.com/?q=The+Hermitage+Jakarta',
+
+  gallery: [
+    'https://picsum.photos/seed/wedding1/800/560',
+    'https://picsum.photos/seed/wedding2/500/500',
+    'https://picsum.photos/seed/wedding3/500/500',
+    'https://picsum.photos/seed/wedding4/500/500',
+    'https://picsum.photos/seed/wedding5/500/500'
+  ],
+
+  musicType: 'default',
+  musicUrl: '',
+
+  waNumber: '6281234567890',
+  waDisplay: '+62 812-3456-7890',
+  email: '',
+  emailSubject: 'Undangan Pernikahan Tiyo & Miftahul',
+  scriptURL: '',
+
+  bankName: 'Bank BCA',
+  bankAccount: '1234 5678 90',
+  bankCopy: '1234567890',
+  bankOwner: 'Tiyo Wahyudi',
+  giftAddress: 'Jl. Melati No. 12, RT 04 / RW 07, Jakarta Selatan, 12140',
+
+  quote: 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup dari jenismu sendiri, supaya kamu merasa tenteram kepadanya.',
+  quoteSource: 'QS. Ar-Rum : 21'
+};
+
+const DEFAULT_MUSIC = 'https://commons.wikimedia.org/wiki/Special:FilePath/Chopin_Nocturne_No._2_in_E_Flat_Major,_Op._9.ogg';
+const LS_KEY = 'undangan-data-v1';
+
+/* ============================================================
+   2. INDEXEDDB
+   ============================================================ */
+const IDB = {
+  _db: null,
+  open(){
+    if (this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej) => {
+      const req = indexedDB.open('undangan-blobs', 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
+      };
+      req.onsuccess = () => { this._db = req.result; res(this._db); };
+      req.onerror = () => rej(req.error);
+    });
+  },
+  async put(key, blob){
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('files', 'readwrite');
+      tx.objectStore('files').put(blob, key);
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+  },
+  async get(key){
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('files', 'readonly');
+      const r = tx.objectStore('files').get(key);
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async del(key){
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('files', 'readwrite');
+      tx.objectStore('files').delete(key);
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+};
+
+/* ============================================================
+   3. LOAD / SAVE
+   ============================================================ */
+let DATA = { ...DEFAULT_DATA };
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw){
+      const parsed = JSON.parse(raw);
+      DATA = { ...DEFAULT_DATA, ...parsed };
+      if (!Array.isArray(DATA.gallery) || DATA.gallery.length < 5){
+        DATA.gallery = [...DEFAULT_DATA.gallery];
+      }
+    }
+  } catch(e){ console.warn('Gagal load data:', e); }
+}
+function saveData(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }
+  catch(e){ toast('⚠️ Penyimpanan penuh'); console.warn(e); }
+}
+
+/* ============================================================
+   4. APPLY DATA
+   ============================================================ */
+function applyData(){
+  // Apply theme
+  document.documentElement.setAttribute('data-theme', DATA.theme || 'dark');
+  // Update meta theme-color (status bar HP)
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', (DATA.theme === 'light') ? '#faf8f3' : '#0a0a0a');
+
+  document.querySelectorAll('[data-f]').forEach(el => {
+    const key = el.getAttribute('data-f');
+    if (DATA[key] !== undefined && DATA[key] !== null) el.textContent = DATA[key];
+  });
+  document.querySelectorAll('[data-f-src]').forEach(el => {
+    const key = el.getAttribute('data-f-src');
+    if (DATA[key]) el.src = DATA[key];
+  });
+
+  renderGallery();
+  updateCalendarLink();
+  updateWALink();
+  updateContactSection();
+  startCountdown();
+  applyMusic();
+  syncAdminForm();
+
+  document.querySelectorAll('.gift-copy').forEach(btn => {
+    const key = btn.getAttribute('data-copy-key');
+    btn.dataset.copy = DATA[key] || '';
+  });
+  const mapBtn = document.getElementById('mapBtn');
+  if (mapBtn) mapBtn.href = DATA.mapsUrl || '#';
+}
+
+/* ============================================================
+   5. MUSIC
+   ============================================================ */
+const musicEl = document.getElementById('music');
+let musicOn = false;
+let currentMusicURL = null;
+
+async function applyMusic(){
+  if (currentMusicURL && currentMusicURL.startsWith('blob:')){
+    try{ URL.revokeObjectURL(currentMusicURL); }catch(e){}
+    currentMusicURL = null;
+  }
+  let src = '';
+  const type = DATA.musicType || 'default';
+
+  if (type === 'default') src = DEFAULT_MUSIC;
+  else if (type === 'url') src = DATA.musicUrl || DEFAULT_MUSIC;
+  else if (type === 'file'){
+    try{
+      const blob = await IDB.get('music');
+      if (blob){ currentMusicURL = URL.createObjectURL(blob); src = currentMusicURL; }
+      else src = DEFAULT_MUSIC;
+    } catch(e){ src = DEFAULT_MUSIC; }
+  }
+  musicEl.src = src;
+  musicEl.load();
+
+  const hint = document.getElementById('musicFileHint');
+  if (hint){
+    if (type === 'file'){
+      try{
+        const blob = await IDB.get('music');
+        if (blob){
+          const size = (blob.size / 1024 / 1024).toFixed(1);
+          hint.textContent = `✓ File tersimpan (${size} MB)`;
+        } else hint.textContent = 'Belum ada file diupload.';
+      } catch(e){ hint.textContent = 'Belum ada file diupload.'; }
+    } else hint.textContent = 'Belum ada file diupload.';
+  }
+}
+function setMusicUI(){
+  const btn = document.getElementById('musicBtn');
+  btn.classList.toggle('playing', musicOn);
+  btn.classList.add('show');
+}
+function tryPlayMusic(){
+  const p = musicEl.play();
+  if (p && p.then){
+    p.then(() => { musicOn = true; setMusicUI(); })
+     .catch(err => console.log('Autoplay diblokir:', err));
+  }
+}
+
+/* ============================================================
+   6. COUNTDOWN
+   ============================================================ */
+let cdTimer = null;
+function startCountdown(){
+  if (cdTimer) clearInterval(cdTimer);
+  const target = new Date(DATA.weddingDateISO).getTime();
+  const cdD = document.getElementById('cdD');
+  const cdH = document.getElementById('cdH');
+  const cdM = document.getElementById('cdM');
+  const cdS = document.getElementById('cdS');
+  const cdGrid = document.getElementById('cdGrid');
+  const pad = n => String(n).padStart(2,'0');
+
+  function tick(){
+    const dist = target - Date.now();
+    if (dist <= 0){
+      cdGrid.innerHTML = '<div class="cd-done">Hari Bahagia Telah Tiba 🤍</div>';
+      clearInterval(cdTimer); return;
+    }
+    if (!cdD.isConnected) return;
+    cdD.textContent = pad(Math.floor(dist / 86400000));
+    cdH.textContent = pad(Math.floor(dist % 86400000 / 3600000));
+    cdM.textContent = pad(Math.floor(dist % 3600000 / 60000));
+    cdS.textContent = pad(Math.floor(dist % 60000 / 1000));
+  }
+  tick();
+  cdTimer = setInterval(tick, 1000);
+}
+
+function updateCalendarLink(){
+  const btn = document.getElementById('calBtn');
+  if (!btn) return;
+  const start = new Date(DATA.weddingDateISO);
+  const end = new Date(start.getTime() + 6 * 3600000);
+  const fmt = d => d.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+  btn.href = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=' + encodeURIComponent(`Pernikahan ${DATA.groomShort} & ${DATA.brideShort}`)
+    + '&dates=' + fmt(start) + '/' + fmt(end)
+    + '&details=' + encodeURIComponent('Akad & Resepsi Pernikahan')
+    + '&location=' + encodeURIComponent(DATA.resepsiPlace + ', ' + DATA.resepsiAddress);
+}
+
+/* ============================================================
+   7. WA & CONTACT
+   ============================================================ */
+function updateWALink(){
+  const wa = document.getElementById('waLink');
+  if (!wa) return;
+  if (!DATA.waNumber){ wa.style.display = 'none'; return; }
+  wa.style.display = '';
+  const text = `Assalamu'alaikum, saya ingin konfirmasi kehadiran untuk pernikahan ${DATA.groomShort} & ${DATA.brideShort}.\n\nNama: \nKehadiran: Hadir / Tidak Hadir\nJumlah Tamu: \nUcapan: `;
+  wa.href = `https://wa.me/${DATA.waNumber}?text=${encodeURIComponent(text)}`;
+}
+
+function updateContactSection(){
+  const waCard = document.getElementById('waCard');
+  const waDisplayEl = document.getElementById('waDisplay');
+  const waBtn = document.getElementById('waBtn');
+  const waCopy = document.getElementById('waCopy');
+
+  if (DATA.waNumber){
+    waCard.style.display = '';
+    waDisplayEl.textContent = DATA.waDisplay || DATA.waNumber;
+    const greeting = `Assalamu'alaikum, saya ingin bertanya tentang pernikahan ${DATA.groomShort} & ${DATA.brideShort}.`;
+    waBtn.href = `https://wa.me/${DATA.waNumber}?text=${encodeURIComponent(greeting)}`;
+    waCopy.dataset.copy = DATA.waNumber;
+    waCopy.style.display = '';
+  } else {
+    waCard.style.display = 'none';
+  }
+
+  const emailCard = document.getElementById('emailCard');
+  const emailDisplayEl = document.getElementById('emailDisplay');
+  const emailBtn = document.getElementById('emailBtn');
+  const emailCopy = document.getElementById('emailCopy');
+
+  if (DATA.email){
+    emailCard.style.display = '';
+    emailDisplayEl.textContent = DATA.email;
+    const subj = encodeURIComponent(DATA.emailSubject || 'Undangan Pernikahan');
+    emailBtn.href = `mailto:${DATA.email}?subject=${subj}`;
+    emailCopy.dataset.copy = DATA.email;
+    emailCopy.style.display = '';
+  } else {
+    emailCard.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   8. GUEST NAME
+   ============================================================ */
+(function guestName(){
+  const el = document.getElementById('guestName');
+  const params = new URLSearchParams(location.search);
+  const to = params.get('to') || params.get('kepada');
+  if (to){
+    const clean = decodeURIComponent(to.replace(/\+/g,' ')).trim();
+    if (clean) el.textContent = clean;
+  }
+  const rn = document.getElementById('rName');
+  if (rn) rn.value = el.textContent === 'Tamu Undangan' ? '' : el.textContent;
+})();
+
+/* ============================================================
+   9. LOADER
+   ============================================================ */
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('loader').classList.add('hide'), 400);
+});
+setTimeout(() => document.getElementById('loader').classList.add('hide'), 3500);
+
+/* ============================================================
+   10. OPEN INVITATION
+   ============================================================ */
+const cover = document.getElementById('cover');
+const envelope = document.getElementById('envelope');
+const adminToggle = document.getElementById('adminToggle');
+let opened = false;
+
+function openInvitation(){
+  if (opened) return;
+  opened = true;
+  tryPlayMusic();
+  envelope.classList.add('open');
+  setTimeout(() => {
+    cover.classList.add('gone');
+    document.body.classList.remove('locked');
+  }, 850);
+  setTimeout(() => {
+    cover.style.display = 'none';
+    document.getElementById('dock').classList.add('show');
+    adminToggle.classList.add('show');
+    revealCheck();
+  }, 1650);
+}
+envelope.addEventListener('click', openInvitation);
+envelope.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openInvitation(); }
+});
+
+/* ============================================================
+   11. MUSIC TOGGLE
+   ============================================================ */
+document.getElementById('musicBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  if (musicOn){ musicEl.pause(); musicOn = false; }
+  else { musicEl.play().then(() => { musicOn = true; setMusicUI(); }).catch(()=>{}); }
+  setMusicUI();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && musicOn) musicEl.pause();
+});
+
+/* ============================================================
+   12. REVEAL
+   ============================================================ */
+const revealEls = Array.from(document.querySelectorAll('.reveal'));
+let io = null;
+if ('IntersectionObserver' in window){
+  io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+}
+function revealCheck(){
+  if (io){
+    revealEls.forEach(el => {
+      if (el.getBoundingClientRect().top < window.innerHeight * 0.92) el.classList.add('in');
+      else io.observe(el);
+    });
+  } else revealEls.forEach(el => el.classList.add('in'));
+}
+
+/* ============================================================
+   13. SCROLL
+   ============================================================ */
+const progress = document.getElementById('progress');
+const topBtn = document.getElementById('topBtn');
+const navLinks = Array.from(document.querySelectorAll('.dock a'));
+const sections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+let ticking = false;
+
+function onScroll(){
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    topBtn.classList.toggle('show', window.scrollY > window.innerHeight * 1.2);
+    let cur = sections[0] ? sections[0].id : null;
+    const mid = window.scrollY + window.innerHeight * 0.35;
+    sections.forEach(s => { if (s.offsetTop <= mid) cur = s.id; });
+    navLinks.forEach(a => a.classList.toggle('active', a.dataset.nav === cur));
+    ticking = false;
+  });
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const el = document.querySelector(a.getAttribute('href'));
+    if (!el) return;
+    e.preventDefault();
+    window.scrollTo({ top: el.offsetTop, behavior: 'smooth' });
+  });
+});
+
+/* ============================================================
+   14. LIGHTBOX
+   ============================================================ */
+const lb = document.getElementById('lightbox');
+const lbImg = document.getElementById('lbImg');
+let galImgs = [];
+let lbIndex = 0;
+
+function bindLightbox(){
+  galImgs = Array.from(document.querySelectorAll('#galGrid img'));
+  galImgs.forEach((img, i) => {
+    img.parentElement.addEventListener('click', () => openLb(i));
+  });
+}
+function openLb(i){
+  if (!galImgs.length) return;
+  lbIndex = (i + galImgs.length) % galImgs.length;
+  lbImg.src = galImgs[lbIndex].src;
+  lbImg.alt = galImgs[lbIndex].alt;
+  lb.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeLb(){
+  lb.classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.getElementById('lbClose').addEventListener('click', closeLb);
+document.getElementById('lbPrev').addEventListener('click', e => { e.stopPropagation(); openLb(lbIndex - 1); });
+document.getElementById('lbNext').addEventListener('click', e => { e.stopPropagation(); openLb(lbIndex + 1); });
+lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
+document.addEventListener('keydown', e => {
+  if (!lb.classList.contains('show')) return;
+  if (e.key === 'Escape') closeLb();
+  if (e.key === 'ArrowLeft') openLb(lbIndex - 1);
+  if (e.key === 'ArrowRight') openLb(lbIndex + 1);
+});
+let tX = 0, tY = 0;
+lb.addEventListener('touchstart', e => { tX = e.changedTouches[0].clientX; tY = e.changedTouches[0].clientY; }, { passive: true });
+lb.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tX;
+  const dy = e.changedTouches[0].clientY - tY;
+  if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) openLb(dx < 0 ? lbIndex + 1 : lbIndex - 1);
+}, { passive: true });
+
+/* ============================================================
+   15. COPY BUTTONS
+   ============================================================ */
+function attachCopy(btn){
+  btn.addEventListener('click', async () => {
+    const text = btn.dataset.copy || '';
+    const orig = btn.textContent;
+    try{
+      if (navigator.clipboard && window.isSecureContext){
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0;';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+      }
+      btn.textContent = '✓ Tersalin';
+      btn.classList.add('done');
+    } catch(e){ btn.textContent = 'Gagal menyalin'; }
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('done'); }, 1800);
+  });
+}
+document.querySelectorAll('.gift-copy').forEach(attachCopy);
+document.getElementById('waCopy').dataset.copy = DATA.waNumber;
+document.getElementById('emailCopy').dataset.copy = DATA.email;
+attachCopy(document.getElementById('waCopy'));
+attachCopy(document.getElementById('emailCopy'));
+
+/* ============================================================
+   16. RSVP — Sheet + Email + WhatsApp
+   ============================================================ */
+const form = document.getElementById('rsvpForm');
+const statusEl = document.getElementById('rStatus');
+const submit = document.getElementById('rSubmit');
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const name   = document.getElementById('rName').value.trim();
+  const attend = document.getElementById('rAttend').value;
+  const guests = document.getElementById('rGuests').value || '1';
+  const msg    = document.getElementById('rMsg').value.trim();
+
+  if (!name || !attend){
+    statusEl.textContent = 'Mohon lengkapi nama dan konfirmasi kehadiran.';
+    statusEl.classList.add('err');
+    return;
+  }
+
+  statusEl.textContent = '';
+  statusEl.classList.remove('err');
+  submit.disabled = true;
+  const orig = submit.textContent;
+  submit.textContent = 'Mengirim...';
+
+  const timeStr = new Date().toLocaleString('id-ID', {
+    dateStyle: 'full', timeStyle: 'short', timeZone: 'Asia/Jakarta'
+  });
+
+  const hasSheet = !!DATA.scriptURL;
+  const hasEmail = !!DATA.email;
+
+  if (!hasSheet && !hasEmail){
+    const text = `Konfirmasi Kehadiran:\nNama: ${name}\nKehadiran: ${attend}\nJumlah Tamu: ${guests}\nUcapan: ${msg}`;
+    window.open(`https://wa.me/${DATA.waNumber}?text=${encodeURIComponent(text)}`, '_blank');
+    statusEl.textContent = 'Membuka WhatsApp...';
+    submit.disabled = false;
+    submit.textContent = orig;
+    return;
+  }
+
+  let sheetOK = false;
+  let emailOK = false;
+
+  if (hasSheet){
+    try {
+      await fetch(DATA.scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ name, attend, guests, message: msg, time: timeStr })
+      });
+      sheetOK = true;
+    } catch (err){
+      console.error('Gagal kirim ke Sheet:', err);
+    }
+  }
+
+  if (hasEmail){
+    try {
+      const payload = {
+        _subject: `RSVP: ${name} — ${attend}`,
+        _template: 'table',
+        _captcha: 'false',
+        'Nama Tamu': name,
+        'Konfirmasi Kehadiran': attend,
+        'Jumlah Tamu': guests,
+        'Ucapan & Doa': msg || '(tidak ada pesan)',
+        'Waktu Kirim': timeStr
+      };
+
+      const res = await fetch(
+        `https://formsubmit.co/ajax/${encodeURIComponent(DATA.email)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (res.ok) emailOK = true;
+      else console.warn('FormSubmit response tidak OK:', res.status);
+    } catch (err){
+      console.error('Gagal kirim ke Email:', err);
+    }
+  }
+
+  if ((hasSheet && sheetOK) || (hasEmail && emailOK)){
+    statusEl.textContent = `Terima kasih, ${name}! Konfirmasi Anda telah kami terima. 🤍`;
+    statusEl.classList.remove('err');
+    form.reset();
+  } else {
+    statusEl.textContent = 'Gagal mengirim. Silakan coba lagi atau hubungi kami via WhatsApp.';
+    statusEl.classList.add('err');
+  }
+
+  submit.disabled = false;
+  submit.textContent = orig;
+});
+
+/* ============================================================
+   17. SHARE
+   ============================================================ */
+document.getElementById('shareBtn').addEventListener('click', async () => {
+  const data = {
+    title: `Undangan ${DATA.groomShort} & ${DATA.brideShort}`,
+    text: `Undangan Pernikahan ${DATA.groomName} & ${DATA.brideName}`,
+    url: location.href
+  };
+  try{
+    if (navigator.share) await navigator.share(data);
+    else { await navigator.clipboard.writeText(location.href); toast('Link disalin!'); }
+  } catch(e){}
+});
+
+/* ============================================================
+   18. TOAST
+   ============================================================ */
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+}
+
+/* ============================================================
+   19. ADMIN PANEL + PASSWORD GATE
+   ============================================================ */
+const adminPanel = document.getElementById('adminPanel');
+const pwdOverlay = document.getElementById('pwdOverlay');
+const pwdInput = document.getElementById('pwdInput');
+const pwdErr = document.getElementById('pwdErr');
+const pwdOk = document.getElementById('pwdOk');
+const pwdCancel = document.getElementById('pwdCancel');
+
+const SESSION_UNLOCK_KEY = 'undangan-unlocked-session';
+
+function isUnlocked(){
+  try{ return sessionStorage.getItem(SESSION_UNLOCK_KEY) === '1'; }
+  catch(e){ return false; }
+}
+function setUnlocked(v){
+  try{
+    if (v) sessionStorage.setItem(SESSION_UNLOCK_KEY, '1');
+    else sessionStorage.removeItem(SESSION_UNLOCK_KEY);
+  } catch(e){}
+}
+
+let failedAttempts = 0;
+let lockUntil = 0;
+
+function openPwd(){
+  pwdErr.textContent = '';
+  pwdInput.value = '';
+  pwdOverlay.classList.add('show');
+
+  if (Date.now() < lockUntil){
+    const sisa = Math.ceil((lockUntil - Date.now()) / 1000);
+    pwdErr.textContent = `Terlalu banyak percobaan. Coba lagi dalam ${sisa} detik.`;
+    pwdOk.disabled = true;
+    pwdInput.disabled = true;
+    setTimeout(() => {
+      pwdOk.disabled = false;
+      pwdInput.disabled = false;
+      pwdErr.textContent = '';
+      pwdInput.focus();
+    }, lockUntil - Date.now());
+  } else {
+    pwdOk.disabled = false;
+    pwdInput.disabled = false;
+    setTimeout(() => pwdInput.focus(), 300);
+  }
+}
+function closePwd(){
+  pwdOverlay.classList.remove('show');
+  pwdInput.value = '';
+  pwdErr.textContent = '';
+}
+
+pwdCancel.addEventListener('click', closePwd);
+pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') pwdOk.click(); });
+
+pwdOk.addEventListener('click', () => {
+  const val = pwdInput.value.trim();
+  if (!val){ pwdErr.textContent = 'Kata sandi tidak boleh kosong.'; return; }
+
+  if (val === OWNER_PASSWORD){
+    failedAttempts = 0;
+    setUnlocked(true);
+    closePwd();
+    adminPanel.classList.add('open');
+    toast('Selamat datang ✓');
+  } else {
+    failedAttempts++;
+    pwdInput.value = '';
+    pwdInput.focus();
+
+    if (failedAttempts >= 5){
+      lockUntil = Date.now() + 30000;
+      failedAttempts = 0;
+      pwdErr.textContent = 'Terlalu banyak percobaan. Tunggu 30 detik.';
+      pwdOk.disabled = true;
+      pwdInput.disabled = true;
+      setTimeout(() => {
+        pwdOk.disabled = false;
+        pwdInput.disabled = false;
+        pwdErr.textContent = '';
+        pwdInput.focus();
+      }, 30000);
+    } else {
+      pwdErr.textContent = `Kata sandi salah. (${failedAttempts}/5 percobaan)`;
+    }
+  }
+});
+
+adminToggle.addEventListener('click', () => {
+  if (isUnlocked()) adminPanel.classList.add('open');
+  else openPwd();
+});
+
+document.getElementById('adminClose').addEventListener('click', () => adminPanel.classList.remove('open'));
+document.getElementById('adminDone').addEventListener('click', () => {
+  adminPanel.classList.remove('open');
+  toast('Pengaturan tersimpan ✓');
+});
+document.getElementById('adminLock').addEventListener('click', () => {
+  setUnlocked(false);
+  adminPanel.classList.remove('open');
+  toast('Panel dikunci 🔒');
+});
+
+/* --- Tema: handler radio --- */
+document.querySelectorAll('input[name="themeType"]').forEach(r => {
+  r.addEventListener('change', () => {
+    if (!r.checked) return;
+    DATA.theme = r.value;
+    saveData();
+    document.documentElement.setAttribute('data-theme', DATA.theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', (DATA.theme === 'light') ? '#faf8f3' : '#0a0a0a');
+    toast(DATA.theme === 'light' ? '☀️ Tema terang aktif' : '🌙 Tema gelap aktif');
+  });
+});
+
+/* --- Sync admin form --- */
+function syncAdminForm(){
+  document.querySelectorAll('[data-bind]').forEach(el => {
+    const key = el.getAttribute('data-bind');
+    if (DATA[key] === undefined) return;
+    el.value = DATA[key] || '';
+  });
+  document.querySelectorAll('[data-preview]').forEach(el => {
+    const key = el.getAttribute('data-preview');
+    el.src = DATA[key] || '';
+    el.style.display = DATA[key] ? '' : 'none';
+  });
+  document.querySelectorAll('input[name="musicType"]').forEach(r => {
+    r.checked = (r.value === (DATA.musicType || 'default'));
+  });
+  document.querySelectorAll('input[name="themeType"]').forEach(r => {
+    r.checked = (r.value === (DATA.theme || 'dark'));
+  });
+  updateMusicFieldVisibility();
+
+  const container = document.querySelector('[data-gal-slots]');
+  if (container && !container.children.length){
+    for (let i = 0; i < 5; i++){
+      const wrap = document.createElement('div');
+      wrap.className = 'admin-field';
+      wrap.innerHTML = `
+        <label>Foto ${i+1}${i===0?' (besar)':''}</label>
+        <div class="photo-row">
+          <img class="photo-preview" src="${DATA.gallery[i] || ''}" data-gal-preview="${i}">
+          <div class="photo-actions">
+            <input type="text" data-gal-url="${i}" value="${(DATA.gallery[i]||'').replace(/"/g,'&quot;')}" placeholder="URL foto...">
+            <label class="mini-btn gold" style="text-align:center;display:block;">📷 Upload<input type="file" accept="image/*" data-gal-upload="${i}" style="display:none;"></label>
+          </div>
+        </div>`;
+      container.appendChild(wrap);
+    }
+    bindGalleryInputs();
+  }
+}
+
+function bindGalleryInputs(){
+  document.querySelectorAll('[data-gal-upload]').forEach(inp => {
+    inp.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const i = parseInt(inp.getAttribute('data-gal-upload'), 10);
+      try{
+        toast('Memproses foto...');
+        const dataUrl = await resizeImage(file, i === 0 ? 1400 : 900, 0.82);
+        DATA.gallery[i] = dataUrl;
+        saveData();
+        document.querySelector(`[data-gal-url="${i}"]`).value = dataUrl;
+        document.querySelector(`[data-gal-preview="${i}"]`).src = dataUrl;
+        renderGallery();
+        toast('Foto tersimpan ✓');
+      } catch(err){ toast('Gagal memproses foto'); console.error(err); }
+      inp.value = '';
+    });
+  });
+
+  document.querySelectorAll('[data-gal-url]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const i = parseInt(inp.getAttribute('data-gal-url'), 10);
+      DATA.gallery[i] = inp.value;
+      saveData();
+      document.querySelector(`[data-gal-preview="${i}"]`).src = inp.value;
+      renderGallery();
+    });
+  });
+}
+
+/* --- Auto-save --- */
+document.querySelectorAll('[data-bind]').forEach(el => {
+  const handler = () => {
+    const key = el.getAttribute('data-bind');
+    DATA[key] = el.value;
+    saveData();
+    applyDataSoft(key);
+  };
+  el.addEventListener('input', handler);
+  el.addEventListener('change', handler);
+});
+
+function applyDataSoft(changedKey){
+  document.querySelectorAll(`[data-f="${changedKey}"]`).forEach(el => {
+    el.textContent = DATA[changedKey];
+  });
+  document.querySelectorAll(`[data-f-src="${changedKey}"]`).forEach(el => {
+    el.src = DATA[changedKey];
+  });
+  if (changedKey === 'groomPhoto' || changedKey === 'bridePhoto'){
+    document.querySelectorAll(`[data-preview="${changedKey}"]`).forEach(el => {
+      el.src = DATA[changedKey]; el.style.display = DATA[changedKey] ? '' : 'none';
+    });
+  }
+  if (changedKey === 'weddingDateISO'){ startCountdown(); updateCalendarLink(); }
+  if (changedKey === 'mapsUrl'){
+    const mb = document.getElementById('mapBtn');
+    if (mb) mb.href = DATA.mapsUrl || '#';
+  }
+  if (changedKey === 'waNumber' || changedKey === 'waDisplay' || changedKey === 'email' || changedKey === 'emailSubject'){
+    updateWALink();
+    updateContactSection();
+  }
+  if (changedKey === 'bankCopy' || changedKey === 'giftAddress'){
+    document.querySelectorAll('.gift-copy').forEach(btn => {
+      const k = btn.getAttribute('data-copy-key');
+      btn.dataset.copy = DATA[k] || '';
+    });
+  }
+}
+
+/* --- Music type --- */
+document.querySelectorAll('input[name="musicType"]').forEach(r => {
+  r.addEventListener('change', () => {
+    DATA.musicType = r.value;
+    saveData();
+    updateMusicFieldVisibility();
+    applyMusic();
+  });
+});
+function updateMusicFieldVisibility(){
+  const t = DATA.musicType || 'default';
+  document.getElementById('musicUrlField').style.display = (t === 'url') ? '' : 'none';
+  document.getElementById('musicFileField').style.display = (t === 'file') ? '' : 'none';
+}
+
+/* --- Resize --- */
+async function resizeImage(file, maxW = 1200, quality = 0.82){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxW){ height = Math.round(height * maxW / width); width = maxW; }
+        const c = document.createElement('canvas');
+        c.width = width; c.height = height;
+        c.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(c.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* --- Photo upload --- */
+document.querySelectorAll('[data-upload]').forEach(inp => {
+  inp.addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const key = inp.getAttribute('data-upload');
+    try{
+      toast('Memproses foto...');
+      const dataUrl = await resizeImage(file);
+      DATA[key] = dataUrl;
+      saveData();
+      document.querySelector(`[data-bind="${key}"]`).value = dataUrl;
+      document.querySelectorAll(`[data-preview="${key}"]`).forEach(el => {
+        el.src = dataUrl; el.style.display = '';
+      });
+      applyDataSoft(key);
+      toast('Foto tersimpan ✓');
+    } catch(err){ toast('Gagal memproses foto'); console.error(err); }
+    inp.value = '';
+  });
+});
+
+/* --- Music file --- */
+document.getElementById('musicFile').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try{
+    toast('Menyimpan musik...');
+    await IDB.put('music', file);
+    DATA.musicType = 'file';
+    saveData();
+    await applyMusic();
+    toast('Musik tersimpan ✓');
+  } catch(err){ toast('Gagal menyimpan musik'); console.error(err); }
+  e.target.value = '';
+});
+
+/* --- Test music --- */
+document.getElementById('musicTest').addEventListener('click', async () => {
+  await applyMusic();
+  try{
+    await musicEl.play();
+    musicOn = true; setMusicUI();
+    toast('▶ Memutar musik...');
+    setTimeout(() => { musicEl.pause(); musicOn = false; setMusicUI(); }, 4000);
+  } catch(e){ toast('Gagal memutar musik'); }
+});
+
+/* --- Export / Import / Reset --- */
+document.getElementById('adminExport').addEventListener('click', () => {
+  const dataStr = JSON.stringify(DATA, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `undangan-backup-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup diunduh ✓');
+});
+
+document.getElementById('adminImport').addEventListener('click', () => {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try{
+      const text = await file.text();
+      const obj = JSON.parse(text);
+      DATA = { ...DEFAULT_DATA, ...obj };
+      saveData();
+      applyData();
+      toast('Data berhasil diimpor ✓');
+    } catch(err){ toast('File tidak valid'); console.error(err); }
+  });
+  inp.click();
+});
+
+document.getElementById('adminReset').addEventListener('click', async () => {
+  if (!confirm('Reset semua pengaturan ke default? Data yang tersimpan akan hilang.')) return;
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  try{ await IDB.del('music'); }catch(e){}
+  DATA = { ...DEFAULT_DATA };
+  applyData();
+  toast('Data direset ✓');
+});
+
+/* ============================================================
+   20. GALLERY RENDER
+   ============================================================ */
+function renderGallery(){
+  const gal = document.getElementById('galGrid');
+  if (!gal) return;
+  gal.innerHTML = '';
+  (DATA.gallery || []).forEach((src, i) => {
+    if (!src) return;
+    const div = document.createElement('div');
+    div.className = 'gal-item';
+    const img = document.createElement('img');
+    img.src = src; img.alt = 'Galeri ' + (i+1); img.loading = 'lazy';
+    div.appendChild(img); gal.appendChild(div);
+  });
+  bindLightbox();
+}
+
+/* ============================================================
+   21. INIT
+   ============================================================ */
+loadData();
+applyData();
+revealCheck();
+
+})();
+</script>
+</body>
+</html>
