@@ -400,6 +400,7 @@ select option{background:var(--select-option);}
 .admin-footer button:active{background:rgba(201,162,75,.15);}
 .admin-footer button.primary{background:var(--gold);color:#1a1405;border-color:var(--gold);}
 .admin-footer button.primary:active{background:var(--gold-light);}
+.admin-footer button.sync-btn{background:#2a7a3b;color:#fff;border-color:#2a7a3b;}
 
 .toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 90px);transform:translateX(-50%) translateY(20px);background:var(--toast-bg);border:1px solid var(--gold);color:var(--toast-fg);padding:11px 20px;border-radius:999px;font-size:13px;letter-spacing:.05em;z-index:500;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;box-shadow:0 12px 30px rgba(0,0,0,.4);max-width:calc(100vw - 40px);text-align:center;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -415,13 +416,113 @@ select option{background:var(--select-option);}
 [data-theme="light"] .cover-script{text-shadow:0 2px 12px rgba(168,130,46,.18);}
 [data-theme="light"] .hero-names .amp{text-shadow:0 2px 12px rgba(168,130,46,.2);}
 [data-theme="light"] .closing-script{text-shadow:0 2px 14px rgba(168,130,46,.15);}
+/* ============ UPGRADE: interaktif + ikon minimalis ============ */
+body{font-weight:500}
+:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
+.ic{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex-shrink:0}
+.ic.heart{fill:currentColor;stroke:none;color:var(--gold);width:.85em;height:.85em;vertical-align:-.1em}
+.dust{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+#closing{overflow:hidden}
+/* ranting botani */
+.sprig{position:absolute;width:clamp(64px,20vw,118px);aspect-ratio:100/220;color:var(--gold);opacity:.5;pointer-events:none;transform-origin:50% 100%;animation:sway 9s ease-in-out infinite;z-index:1}
+@keyframes sway{0%,100%{rotate:0deg}50%{rotate:2.5deg}}
+.sp-bl{left:-6px;bottom:-14px;transform:rotate(14deg)}
+.sp-br{right:-6px;bottom:-14px;transform:scaleX(-1) rotate(14deg)}
+.sp-tl{left:-6px;top:-14px;transform:rotate(166deg) scaleX(-1)}
+.sp-tr{right:-6px;top:-14px;transform:rotate(194deg)}
+#closing .sprig{opacity:.4}
+/* loader */
+.loader-mono svg{width:56px;height:56px;stroke:var(--gold);fill:none;stroke-width:1}
+.loader-mono .d{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.6s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+/* cover */
+.envelope{animation:floaty2 4s ease-in-out infinite;transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .3s ease}
+@keyframes floaty2{0%,100%{translate:0 0}50%{translate:0 -7px}}
+.env-seal::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--gold);animation:ring 2.6s ease-out infinite}
+@keyframes ring{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.6)}}
+.env-seal{font-size:13px;font-style:italic}
+.music-btn.playing::after{content:'';position:absolute;inset:-1px;border-radius:50%;border:1px solid var(--gold);animation:ring 2.4s ease-out infinite}
+/* hero */
+.hero-bg{position:absolute;inset:-8% 0 0;background-size:cover;background-position:center;opacity:.14;filter:grayscale(1) sepia(.5);-webkit-mask-image:linear-gradient(#000 30%,transparent 90%);mask-image:linear-gradient(#000 30%,transparent 90%);transform:translateY(calc(var(--sy,0)*.18px));pointer-events:none}
+[data-theme="light"] .hero-bg{opacity:.2;filter:grayscale(1) sepia(.3)}
+.hero-names .ch{display:inline-block;opacity:0;transform:translateY(.45em) rotateX(-50deg);transition:opacity .8s var(--ease),transform .9s var(--ease);transition-delay:calc(var(--ci)*50ms + .25s)}
+.hero-names.in .ch{opacity:1;transform:none}
+.orn.reveal line,.orn.reveal rect{stroke-dasharray:90;stroke-dashoffset:90;transition:stroke-dashoffset 1.6s var(--ease) .3s}
+.orn.reveal.in line,.orn.reveal.in rect{stroke-dashoffset:0}
+/* kartu: sorotan mengikuti kursor */
+.spot{position:relative;overflow:hidden}
+.spot::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),rgba(201,162,75,.18),transparent 70%)}
+.spot:hover::after{opacity:1}
+/* mempelai: bingkai lengkung */
+.avatar{width:148px;height:188px;border-radius:999px 999px 6px 6px;overflow:visible;position:relative;transform:perspective(600px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .3s ease}
+.avatar::before{content:'';position:absolute;inset:-9px;border:1px solid var(--line-soft);border-radius:999px 999px 12px 12px;transition:inset .5s var(--ease),border-color .5s}
+.person:hover .avatar::before{inset:-14px;border-color:var(--gold)}
+.avatar img{border-radius:999px 999px 3px 3px}
+.person:hover .avatar img{filter:none}
+.cd-num.tick{animation:numIn .5s var(--ease)}
+@keyframes numIn{from{opacity:0;transform:translateY(-.45em)}}
+/* timeline menyala saat di-scroll */
+.timeline::after{content:'';position:absolute;left:8px;top:6px;width:1px;height:calc((100% - 12px)*var(--tl,0));background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.tl-item::before{transition:background .5s,box-shadow .5s}
+.tl-item.on::before{background:var(--gold);box-shadow:0 0 0 6px rgba(201,162,75,.16)}
+/* galeri */
+.gal-item{border-radius:6px}
+.gal-grid .gal-item{opacity:0;transform:scale(.96);transition:opacity .8s var(--ease),transform .8s var(--ease);transition-delay:calc(var(--i,0)*.1s)}
+.gal-grid.in .gal-item{opacity:1;transform:none}
+.gal-zoom{position:absolute;right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ui-bg);border:1px solid var(--line);color:var(--gold);opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s var(--ease);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.gal-item:hover .gal-zoom{opacity:1;transform:none}
+@media(hover:none){.gal-zoom{opacity:.9;transform:none}}
+.lb-count{position:absolute;bottom:calc(var(--safe-b) + 18px);left:50%;translate:-50% 0;font-family:'Playfair Display',serif;letter-spacing:.3em;color:var(--gold-light);font-size:13px}
+/* dock: hanya menu aktif yang menampilkan label */
+.dock a{flex-direction:row;width:auto;padding:11px 13px;gap:0;transition:color .3s,background .3s,padding .4s var(--ease),gap .4s}
+.dock a svg{width:19px;height:19px}
+.dock a span{max-width:0;opacity:0;overflow:hidden;white-space:nowrap;font-size:10px;letter-spacing:.14em;transition:max-width .45s var(--ease),opacity .3s}
+.dock a.active{padding:11px 16px;gap:7px}
+.dock a.active span{max-width:72px;opacity:1}
+@media(max-width:340px){.dock a{width:auto;padding:10px}.dock a.active{padding:10px 12px}}
+/* tombol */
+.btn,.submit-btn,.gift-copy,.mini-btn,.pwd-btns button,.seg button{position:relative;overflow:hidden}
+.btn{background:linear-gradient(var(--gold),var(--gold)) no-repeat 0 100%/100% 0;transition:background-size .45s var(--ease),color .3s,transform .25s var(--ease),translate .2s}
+.btn:hover,.btn:focus-visible{background:linear-gradient(var(--gold),var(--gold)) no-repeat 0 100%/100% 100%;color:#1a1405}
+.rip{position:absolute;border-radius:50%;background:rgba(255,244,209,.35);transform:scale(0);animation:rip .65s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+.spark{position:fixed;width:5px;height:5px;border-radius:50%;background:var(--gold);z-index:600;pointer-events:none}
+.gift-copy.done::before,.mini-btn.done::before{content:'';display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center/contain no-repeat}
+/* RSVP */
+.field{position:relative}
+.field:focus-within label{color:var(--gold-light)}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(201,162,75,.12)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{padding:12px 6px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:2px;font-size:15px;cursor:pointer;transition:background .3s,color .3s,border-color .3s}
+.seg button:hover{border-color:var(--gold);color:var(--gold-light)}
+.seg button[aria-checked="true"]{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+.has-seg select{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.step{display:grid;grid-template-columns:48px 1fr 48px;gap:8px}
+.step button{border:1px solid var(--line);background:transparent;color:var(--gold);border-radius:2px;cursor:pointer;display:grid;place-items:center;transition:background .25s,color .25s}
+.step button:hover{background:var(--gold);color:#1a1405}
+.step input{text-align:center;-moz-appearance:textfield}
+.step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.wa-alt{display:inline-block;margin-top:18px;font-size:14px;color:var(--gold-light);padding-bottom:3px;background:linear-gradient(currentColor,currentColor) no-repeat 0 100%/0 1px;transition:background-size .4s var(--ease)}
+.wa-alt:hover{background-size:100% 1px}
+/* panel admin */
+.admin-header h2,.admin-section > summary .sum{display:flex;align-items:center;gap:10px}
+.admin-section > summary .sum .ic{width:30px;height:30px;padding:7px;border:1px solid var(--line);border-radius:50%;color:var(--gold)}
+.admin-section > summary::after{content:'';width:7px;height:7px;border:solid var(--gold);border-width:0 1.5px 1.5px 0;transform:rotate(45deg);font-size:0;transition:transform .3s}
+.admin-section[open] > summary::after{transform:rotate(225deg)}
+.admin-close .ic{width:16px;height:16px}
+.mini-btn .ic,.theme-group label .ic{width:14px;height:14px}
+.admin-footer{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.admin-footer button{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 6px;font-size:10px}
+.gal-slot{padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+
 </style>
 </head>
 <body class="locked">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7" cy="12" r=".6"/><circle cx="9.5" cy="7.5" r=".6"/><circle cx="14.5" cy="7.5" r=".6"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol><symbol id="i-rings" viewBox="0 0 24 24"><circle cx="9" cy="14" r="5"/><circle cx="15" cy="10" r="5"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 17v4M17 19h4"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-6 6-3-3-4 4"/></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.5a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol><symbol id="i-quote" viewBox="0 0 24 24"><path d="M7 7h4v5a4 4 0 0 1-4 4M15 7h4v5a4 4 0 0 1-4 4"/></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4l4 4M4 20h16"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol><symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></symbol><symbol id="i-headphones" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v6H5a1 1 0 0 1-1-1zM20 14h-3v6h2a1 1 0 0 0 1-1z"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-9.3-9.4A5.1 5.1 0 0 1 12 6.6a5.1 5.1 0 0 1 9.3 5c-1.8 4.7-9.3 9.4-9.3 9.4z"/></symbol><symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-expand" viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></symbol><symbol id="sprig" viewBox="0 0 100 220" fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><path d="M50 218C46 160 58 110 50 22" fill="none"/><path transform="translate(50 196) scale(1.00)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 184) scale(-1.00 1.00)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 166) scale(0.89)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 154) scale(-0.89 0.89)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 136) scale(0.78)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 124) scale(-0.78 0.78)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 106) scale(0.67)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 94) scale(-0.67 0.67)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 78) scale(0.56)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 66) scale(-0.56 0.56)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 52) scale(0.45)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path transform="translate(50 40) scale(-0.45 0.45)" d="M0 0c-20-2-32-14-34-28 20-1 32 10 34 28z"/><path d="M50 22c-6-8-6-16 0-20 6 4 6 12 0 20z"/></symbol></defs></svg>
 
 <!-- LOADER -->
 <div id="loader">
-  <div class="loader-mono">✦</div>
+  <div class="loader-mono"><svg viewBox="0 0 60 60"><rect class="d" pathLength="1" x="14" y="14" width="32" height="32" transform="rotate(45 30 30)"/><rect class="d" pathLength="1" x="20" y="20" width="20" height="20" transform="rotate(45 30 30)"/><circle cx="30" cy="30" r="2" fill="var(--gold)" stroke="none"/></svg></div>
   <div class="loader-bar"></div>
 </div>
 
@@ -450,7 +551,7 @@ select option{background:var(--select-option);}
 </button>
 
 <!-- COVER -->
-<div id="cover">
+<div id="cover"><canvas class="dust" id="dustCover"></canvas><svg class="sprig sp-bl" aria-hidden="true"><use href="#sprig"/></svg><svg class="sprig sp-br" aria-hidden="true"><use href="#sprig"/></svg><svg class="sprig sp-tl" aria-hidden="true"><use href="#sprig"/></svg><svg class="sprig sp-tr" aria-hidden="true"><use href="#sprig"/></svg>
   <div class="cover-inner">
     <div class="eyebrow">The Wedding Of</div>
     <div class="cover-script" data-f="groomShort">Tiyo</div>
@@ -469,7 +570,7 @@ select option{background:var(--select-option);}
     </div>
     <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="Buka undangan">
       <div class="env-body"></div>
-      <div class="env-seal">✦</div>
+      <div class="env-seal" id="envSeal">T&amp;M</div>
       <div class="env-flap"></div>
     </div>
     <div class="tap-hint">Sentuh Amplop Untuk Membuka</div>
@@ -480,7 +581,7 @@ select option{background:var(--select-option);}
 <div id="lightbox" aria-hidden="true">
   <button class="lb-btn lb-close" id="lbClose" aria-label="Tutup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
   <button class="lb-btn lb-prev" id="lbPrev" aria-label="Sebelumnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-  <img id="lbImg" src="" alt="Galeri">
+  <img id="lbImg" src="" alt="Galeri"><div class="lb-count" id="lbCount"></div>
   <button class="lb-btn lb-next" id="lbNext" aria-label="Berikutnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
 </div>
 
@@ -498,8 +599,7 @@ select option{background:var(--select-option);}
 <main id="main">
 
   <!-- HERO -->
-  <section class="section" id="home">
-    <div class="hero-wrap">
+  <section class="section" id="home"><div class="hero-bg" id="heroBg"></div><canvas class="dust" id="dustHero"></canvas><svg class="sprig sp-bl" aria-hidden="true"><use href="#sprig"/></svg><svg class="sprig sp-br" aria-hidden="true"><use href="#sprig"/></svg><div class="hero-wrap">
       <div class="eyebrow reveal">Undangan Pernikahan</div>
       <h1 class="hero-names reveal" style="--d:.1s">
         <span data-f="groomShort">Tiyo</span>
@@ -723,7 +823,7 @@ select option{background:var(--select-option);}
     <p class="lead reveal" style="--d:.2s">Mohon konfirmasi kehadiran Anda sebelum hari bahagia kami.</p>
     <form class="reveal" style="--d:.28s" id="rsvpForm" novalidate>
       <div class="field"><label for="rName">Nama</label><input type="text" id="rName" name="name" placeholder="Nama lengkap Anda" required autocomplete="name"></div>
-      <div class="field"><label for="rAttend">Konfirmasi</label>
+      <div class="field has-seg"><label for="rAttend">Konfirmasi</label><div class="seg" role="radiogroup" aria-label="Konfirmasi kehadiran"><button type="button" role="radio" aria-checked="false" data-v="Hadir">Hadir</button><button type="button" role="radio" aria-checked="false" data-v="Tidak Hadir">Tidak Hadir</button><button type="button" role="radio" aria-checked="false" data-v="Masih Ragu">Masih Ragu</button></div>
         <select id="rAttend" name="attend" required>
           <option value="" disabled selected>Pilih konfirmasi</option>
           <option value="Hadir">Hadir</option>
@@ -731,7 +831,7 @@ select option{background:var(--select-option);}
           <option value="Masih Ragu">Masih Ragu</option>
         </select>
       </div>
-      <div class="field"><label for="rGuests">Jumlah Tamu</label><input type="number" id="rGuests" name="guests" placeholder="1" min="1" max="10" inputmode="numeric"></div>
+      <div class="field"><label for="rGuests">Jumlah Tamu</label><div class="step"><button type="button" data-step="-1" aria-label="Kurangi"><svg class="ic"><use href="#i-minus"/></svg></button><input type="number" id="rGuests" name="guests" placeholder="1" min="1" max="10" inputmode="numeric"><button type="button" data-step="1" aria-label="Tambah"><svg class="ic"><use href="#i-plus"/></svg></button></div></div>
       <div class="field"><label for="rMsg">Ucapan &amp; Doa</label><textarea id="rMsg" name="message" placeholder="Tuliskan ucapan dan doa terbaik Anda..."></textarea></div>
       <button type="submit" class="submit-btn" id="rSubmit">Kirim Konfirmasi</button>
     </form>
@@ -740,7 +840,7 @@ select option{background:var(--select-option);}
   </section>
 
   <!-- CLOSING -->
-  <section class="section" id="closing">
+  <section class="section" id="closing"><svg class="sprig sp-tl" aria-hidden="true"><use href="#sprig"/></svg><svg class="sprig sp-tr" aria-hidden="true"><use href="#sprig"/></svg>
     <div class="eyebrow reveal">Terima Kasih</div>
     <div class="closing-script reveal" style="--d:.08s"><span data-f="groomShort">Tiyo</span> &amp; <span data-f="brideShort">Miftahul</span></div>
     <svg class="orn reveal" style="--d:.14s" viewBox="0 0 220 22" fill="none" stroke="currentColor" stroke-width="1">
@@ -757,7 +857,7 @@ select option{background:var(--select-option);}
       </button>
     </div>
     <div class="footer-note reveal" style="--d:.38s">Wassalamu'alaikum Warahmatullahi Wabarakatuh</div>
-    <div class="credit reveal" style="--d:.44s">Made with ♥ · 2026</div>
+    <div class="credit reveal" style="--d:.44s">Dibuat dengan <svg class="ic heart"><use href="#i-heart"/></svg> 2026</div>
   </section>
 
 </main>
@@ -765,20 +865,20 @@ select option{background:var(--select-option);}
 <!-- ADMIN PANEL -->
 <div class="admin-panel" id="adminPanel">
   <div class="admin-header">
-    <h2>⚙️ Pengaturan Undangan</h2>
-    <button class="admin-close" id="adminClose" aria-label="Tutup">✕</button>
+    <h2><svg class="ic"><use href="#i-gear"/></svg>Pengaturan Undangan</h2>
+    <button class="admin-close" id="adminClose" aria-label="Tutup"><svg class="ic"><use href="#i-x"/></svg></button>
   </div>
 
   <div class="admin-body">
 
     <details class="admin-section" open>
-      <summary>🎨 Tema Tampilan</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-palette"/></svg>Tema Tampilan</span></summary>
       <div class="admin-fields">
         <div class="admin-field">
           <label>Pilih Tema Warna</label>
           <div class="radio-group theme-group">
-            <label><input type="radio" name="themeType" value="dark"> <span class="dot dot-dark"></span> 🌙 Gelap Elegan</label>
-            <label><input type="radio" name="themeType" value="light"> <span class="dot dot-light"></span> ☀️ Terang Bersih</label>
+            <label><input type="radio" name="themeType" value="dark"> <span class="dot dot-dark"></span> <svg class="ic"><use href="#i-moon"/></svg> Gelap Elegan</label>
+            <label><input type="radio" name="themeType" value="light"> <span class="dot dot-light"></span> <svg class="ic"><use href="#i-sun"/></svg> Terang Bersih</label>
           </div>
           <div class="hint">Ubah tema tampilan undangan. Perubahan langsung terlihat.</div>
         </div>
@@ -786,7 +886,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>👰 Mempelai Pria</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-user"/></svg>Mempelai Pria</span></summary>
       <div class="admin-fields">
         <div class="admin-field"><label>Nama Panggilan (untuk cover)</label><input type="text" data-bind="groomShort"></div>
         <div class="admin-field"><label>Nama Lengkap</label><input type="text" data-bind="groomName"></div>
@@ -796,7 +896,7 @@ select option{background:var(--select-option);}
             <img class="photo-preview" data-preview="groomPhoto" src="" alt="">
             <div class="photo-actions">
               <input type="text" data-bind="groomPhoto" placeholder="URL foto...">
-              <label class="mini-btn gold" style="text-align:center;display:block;">📷 Upload Foto<input type="file" accept="image/*" data-upload="groomPhoto" style="display:none;"></label>
+              <label class="mini-btn gold" style="text-align:center;display:block;"><svg class="ic"><use href="#i-camera"/></svg> Upload Foto<input type="file" accept="image/*" data-upload="groomPhoto" style="display:none;"></label>
             </div>
           </div>
         </div>
@@ -804,7 +904,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>👨‍🦰 Mempelai Wanita</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-user"/></svg>Mempelai Wanita</span></summary>
       <div class="admin-fields">
         <div class="admin-field"><label>Nama Panggilan (untuk cover)</label><input type="text" data-bind="brideShort"></div>
         <div class="admin-field"><label>Nama Lengkap</label><input type="text" data-bind="brideName"></div>
@@ -814,7 +914,7 @@ select option{background:var(--select-option);}
             <img class="photo-preview" data-preview="bridePhoto" src="" alt="">
             <div class="photo-actions">
               <input type="text" data-bind="bridePhoto" placeholder="URL foto...">
-              <label class="mini-btn gold" style="text-align:center;display:block;">📷 Upload Foto<input type="file" accept="image/*" data-upload="bridePhoto" style="display:none;"></label>
+              <label class="mini-btn gold" style="text-align:center;display:block;"><svg class="ic"><use href="#i-camera"/></svg> Upload Foto<input type="file" accept="image/*" data-upload="bridePhoto" style="display:none;"></label>
             </div>
           </div>
         </div>
@@ -822,7 +922,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>📅 Tanggal Utama</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-calendar"/></svg>Tanggal Utama</span></summary>
       <div class="admin-fields">
         <div class="admin-field">
           <label>Tanggal & Jam (untuk countdown)</label>
@@ -837,7 +937,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>💍 Akad Nikah</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-rings"/></svg>Akad Nikah</span></summary>
       <div class="admin-fields">
         <div class="admin-field"><label>Hari</label><input type="text" data-bind="akadDay"></div>
         <div class="admin-field"><label>Tanggal</label><input type="text" data-bind="akadDate"></div>
@@ -848,7 +948,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>🎉 Resepsi</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-sparkle"/></svg>Resepsi</span></summary>
       <div class="admin-fields">
         <div class="admin-field"><label>Hari</label><input type="text" data-bind="resepsiDay"></div>
         <div class="admin-field"><label>Tanggal</label><input type="text" data-bind="resepsiDate"></div>
@@ -864,7 +964,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>🖼️ Galeri Foto (5 slot)</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-image"/></svg>Galeri Foto (5 slot)</span></summary>
       <div class="admin-fields">
         <div class="hint">Foto otomatis dikompres. Foto pertama tampil besar.</div>
         <div data-gal-slots></div>
@@ -872,7 +972,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>🎵 Musik Latar</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-music"/></svg>Musik Latar</span></summary>
       <div class="admin-fields">
         <div class="admin-field">
           <label>Sumber Musik</label>
@@ -892,13 +992,13 @@ select option{background:var(--select-option);}
           <div class="hint" id="musicFileHint">Belum ada file diupload.</div>
         </div>
         <div class="admin-field">
-          <button class="mini-btn" id="musicTest">🎧 Test Putar Musik</button>
+          <button class="mini-btn" id="musicTest"><svg class="ic"><use href="#i-headphones"/></svg> Test Putar Musik</button>
         </div>
       </div>
     </details>
 
     <details class="admin-section">
-      <summary>📞 Kontak, WhatsApp, Email & RSVP</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-phone"/></svg>Kontak, WhatsApp, Email & RSVP</span></summary>
       <div class="admin-fields">
         <div class="admin-field">
           <label>Nomor WhatsApp (untuk link)</label>
@@ -929,7 +1029,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>🎁 Rekening & Alamat Kado</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-gift"/></svg>Rekening & Alamat Kado</span></summary>
       <div class="admin-fields">
         <div class="admin-field"><label>Nama Bank</label><input type="text" data-bind="bankName"></div>
         <div class="admin-field"><label>Nomor Rekening (tampilan)</label><input type="text" data-bind="bankAccount"></div>
@@ -940,7 +1040,7 @@ select option{background:var(--select-option);}
     </details>
 
     <details class="admin-section">
-      <summary>💬 Quote / Ayat</summary>
+      <summary><span class="sum"><svg class="ic"><use href="#i-quote"/></svg>Quote / Ayat</span></summary>
       <div class="admin-fields">
         <div class="admin-field"><label>Isi Quote</label><textarea data-bind="quote" rows="3"></textarea></div>
         <div class="admin-field"><label>Sumber</label><input type="text" data-bind="quoteSource"></div>
@@ -950,11 +1050,12 @@ select option{background:var(--select-option);}
   </div>
 
   <div class="admin-footer">
-    <button id="adminExport">📤 Ekspor</button>
-    <button id="adminImport">📥 Impor</button>
-    <button id="adminReset">↺ Reset</button>
-    <button id="adminLock">🔒 Kunci</button>
-    <button class="primary" id="adminDone">✓ Selesai</button>
+    <button id="adminExport"><svg class="ic"><use href="#i-upload"/></svg><span>Ekspor</span></button>
+    <button id="adminImport"><svg class="ic"><use href="#i-download"/></svg><span>Impor</span></button>
+    <button id="adminReset"><svg class="ic"><use href="#i-reset"/></svg><span>Reset</span></button>
+    <button id="adminSync" class="sync-btn"><svg class="ic"><use href="#i-link"/></svg><span>Sync Kode</span></button>
+    <button id="adminLock"><svg class="ic"><use href="#i-lock"/></svg><span>Kunci</span></button>
+    <button class="primary" id="adminDone"><svg class="ic"><use href="#i-check"/></svg><span>Selesai</span></button>
   </div>
 </div>
 
@@ -986,12 +1087,12 @@ select option{background:var(--select-option);}
 'use strict';
 
 /* ============================================================
-   🔐 PASSWORD PANEL ADMIN — GANTI DI SINI
+   PASSWORD PANEL ADMIN — GANTI DI SINI
    ============================================================ */
 const OWNER_PASSWORD = 'tiyo2026';
 
 /* ============================================================
-   1. DATA DEFAULT
+   1. DATA DEFAULT — (Bagian ini yang akan diupdate oleh tombol Sync)
    ============================================================ */
 const DEFAULT_DATA = {
   theme: 'dark',
@@ -1118,7 +1219,7 @@ function loadData(){
 }
 function saveData(){
   try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }
-  catch(e){ toast('⚠️ Penyimpanan penuh'); console.warn(e); }
+  catch(e){ toast('Penyimpanan penuh'); console.warn(e); }
 }
 
 /* ============================================================
@@ -1154,6 +1255,7 @@ function applyData(){
   });
   const mapBtn = document.getElementById('mapBtn');
   if (mapBtn) mapBtn.href = DATA.mapsUrl || '#';
+  enhance();
 }
 
 /* ============================================================
@@ -1190,7 +1292,7 @@ async function applyMusic(){
         const blob = await IDB.get('music');
         if (blob){
           const size = (blob.size / 1024 / 1024).toFixed(1);
-          hint.textContent = `✓ File tersimpan (${size} MB)`;
+          hint.textContent = `File tersimpan (${size} MB)`;
         } else hint.textContent = 'Belum ada file diupload.';
       } catch(e){ hint.textContent = 'Belum ada file diupload.'; }
     } else hint.textContent = 'Belum ada file diupload.';
@@ -1226,14 +1328,14 @@ function startCountdown(){
   function tick(){
     const dist = target - Date.now();
     if (dist <= 0){
-      cdGrid.innerHTML = '<div class="cd-done">Hari Bahagia Telah Tiba 🤍</div>';
+      cdGrid.innerHTML = '<div class="cd-done">Hari Bahagia Telah Tiba</div>';
       clearInterval(cdTimer); return;
     }
     if (!cdD.isConnected) return;
-    cdD.textContent = pad(Math.floor(dist / 86400000));
-    cdH.textContent = pad(Math.floor(dist % 86400000 / 3600000));
-    cdM.textContent = pad(Math.floor(dist % 3600000 / 60000));
-    cdS.textContent = pad(Math.floor(dist % 60000 / 1000));
+    setNum(cdD, pad(Math.floor(dist / 86400000)));
+    setNum(cdH, pad(Math.floor(dist % 86400000 / 3600000)));
+    setNum(cdM, pad(Math.floor(dist % 3600000 / 60000)));
+    setNum(cdS, pad(Math.floor(dist % 60000 / 1000)));
   }
   tick();
   cdTimer = setInterval(tick, 1000);
@@ -1439,6 +1541,7 @@ function openLb(i){
   lbIndex = (i + galImgs.length) % galImgs.length;
   lbImg.src = galImgs[lbIndex].src;
   lbImg.alt = galImgs[lbIndex].alt;
+  document.getElementById('lbCount').textContent = (lbIndex+1) + ' / ' + galImgs.length;
   lb.classList.add('show');
   document.body.style.overflow = 'hidden';
 }
@@ -1481,7 +1584,7 @@ function attachCopy(btn){
         document.body.appendChild(ta); ta.select();
         document.execCommand('copy'); document.body.removeChild(ta);
       }
-      btn.textContent = '✓ Tersalin';
+      btn.textContent = 'Tersalin';
       btn.classList.add('done');
     } catch(e){ btn.textContent = 'Gagal menyalin'; }
     setTimeout(() => { btn.textContent = orig; btn.classList.remove('done'); }, 1800);
@@ -1586,9 +1689,9 @@ form.addEventListener('submit', async e => {
   }
 
   if ((hasSheet && sheetOK) || (hasEmail && emailOK)){
-    statusEl.textContent = `Terima kasih, ${name}! Konfirmasi Anda telah kami terima. 🤍`;
+    statusEl.textContent = `Terima kasih, ${name}! Konfirmasi Anda telah kami terima.`;
     statusEl.classList.remove('err');
-    form.reset();
+    form.reset(); burst(submit);
   } else {
     statusEl.textContent = 'Gagal mengirim. Silakan coba lagi atau hubungi kami via WhatsApp.';
     statusEl.classList.add('err');
@@ -1691,7 +1794,7 @@ pwdOk.addEventListener('click', () => {
     setUnlocked(true);
     closePwd();
     adminPanel.classList.add('open');
-    toast('Selamat datang ✓');
+    toast('Selamat datang');
   } else {
     failedAttempts++;
     pwdInput.value = '';
@@ -1723,12 +1826,12 @@ adminToggle.addEventListener('click', () => {
 document.getElementById('adminClose').addEventListener('click', () => adminPanel.classList.remove('open'));
 document.getElementById('adminDone').addEventListener('click', () => {
   adminPanel.classList.remove('open');
-  toast('Pengaturan tersimpan ✓');
+  toast('Pengaturan tersimpan');
 });
 document.getElementById('adminLock').addEventListener('click', () => {
   setUnlocked(false);
   adminPanel.classList.remove('open');
-  toast('Panel dikunci 🔒');
+  toast('Panel dikunci');
 });
 
 /* --- Tema: handler radio --- */
@@ -1740,8 +1843,22 @@ document.querySelectorAll('input[name="themeType"]').forEach(r => {
     document.documentElement.setAttribute('data-theme', DATA.theme);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', (DATA.theme === 'light') ? '#faf8f3' : '#0a0a0a');
-    toast(DATA.theme === 'light' ? '☀️ Tema terang aktif' : '🌙 Tema gelap aktif');
+    toast(DATA.theme === 'light' ? 'Tema terang aktif' : 'Tema gelap aktif');
   });
+});
+
+/* --- Sync Code Function (FITUR BARU) --- */
+document.getElementById('adminSync').addEventListener('click', async () => {
+  // Membuat string kode JavaScript berdasarkan data saat ini
+  const codeString = "const DEFAULT_DATA = " + JSON.stringify(DATA, null, 2) + ";";
+  
+  try {
+    await navigator.clipboard.writeText(codeString);
+    alert("Berhasil. Data berhasil disalin ke clipboard.\n\nLANGKAH SELANJUTNYA (PENTING):\n1. Buka file index.html Anda di Notepad / VS Code.\n2. Cari tulisan: const DEFAULT_DATA = {\n3. Blok/hapus semua isi dari kurung kurawal buka { sampai tutup } beserta titik koma (;).\n4. Paste (Ctrl+V) kode yang baru saja disalin.\n5. Simpan file dan Upload ulang ke hosting Anda.\n\nSekarang semua tamu akan melihat perubahan ini!");
+  } catch (err) {
+    alert("Gagal menyalin otomatis. Silakan buka Console browser untuk copy manual.");
+    console.log(codeString);
+  }
 });
 
 /* --- Sync admin form --- */
@@ -1765,246 +1882,236 @@ function syncAdminForm(){
   updateMusicFieldVisibility();
 
   const container = document.querySelector('[data-gal-slots]');
-  if (container && !container.children.length){
-    for (let i = 0; i < 5; i++){
-      const wrap = document.createElement('div');
-      wrap.className = 'admin-field';
-      wrap.innerHTML = `
-        <label>Foto ${i+1}${i===0?' (besar)':''}</label>
-        <div class="photo-row">
-          <img class="photo-preview" src="${DATA.gallery[i] || ''}" data-gal-preview="${i}">
-          <div class="photo-actions">
-            <input type="text" data-gal-url="${i}" value="${(DATA.gallery[i]||'').replace(/"/g,'&quot;')}" placeholder="URL foto...">
-            <label class="mini-btn gold" style="text-align:center;display:block;">📷 Upload<input type="file" accept="image/*" data-gal-upload="${i}" style="display:none;"></label>
-          </div>
-        </div>`;
-      container.appendChild(wrap);
+  if (container){
+    if (!container.dataset.built){
+      container.dataset.built = '1';
+      for (let i = 0; i < 5; i++){
+        const slot = document.createElement('div');
+        slot.className = 'admin-field gal-slot';
+        slot.innerHTML = '<label>Foto ' + (i + 1) + (i === 0 ? ' (besar)' : '') + '</label><div class="photo-row"><img class="photo-preview" alt=""><div class="photo-actions"><input type="text" placeholder="URL foto..."><label class="mini-btn gold" style="text-align:center;display:block;"><svg class="ic"><use href="#i-camera"/></svg> Upload Foto<input type="file" accept="image/*" style="display:none;"></label></div></div>';
+        slot.querySelector('input[type=text]').addEventListener('change', e => setGal(i, e.target.value.trim()));
+        slot.querySelector('input[type=file]').addEventListener('change', async e => {
+          const f = e.target.files[0]; if (!f) return;
+          try{ setGal(i, await compressImage(f, 1000, .8)); toast('Foto tersimpan'); }
+          catch(err){ toast('Gagal membaca foto'); }
+          e.target.value = '';
+        });
+        container.appendChild(slot);
+      }
     }
-    bindGalleryInputs();
-  }
-}
-
-function bindGalleryInputs(){
-  document.querySelectorAll('[data-gal-upload]').forEach(inp => {
-    inp.addEventListener('change', async e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const i = parseInt(inp.getAttribute('data-gal-upload'), 10);
-      try{
-        toast('Memproses foto...');
-        const dataUrl = await resizeImage(file, i === 0 ? 1400 : 900, 0.82);
-        DATA.gallery[i] = dataUrl;
-        saveData();
-        document.querySelector(`[data-gal-url="${i}"]`).value = dataUrl;
-        document.querySelector(`[data-gal-preview="${i}"]`).src = dataUrl;
-        renderGallery();
-        toast('Foto tersimpan ✓');
-      } catch(err){ toast('Gagal memproses foto'); console.error(err); }
-      inp.value = '';
-    });
-  });
-
-  document.querySelectorAll('[data-gal-url]').forEach(inp => {
-    inp.addEventListener('input', () => {
-      const i = parseInt(inp.getAttribute('data-gal-url'), 10);
-      DATA.gallery[i] = inp.value;
-      saveData();
-      document.querySelector(`[data-gal-preview="${i}"]`).src = inp.value;
-      renderGallery();
-    });
-  });
-}
-
-/* --- Auto-save --- */
-document.querySelectorAll('[data-bind]').forEach(el => {
-  const handler = () => {
-    const key = el.getAttribute('data-bind');
-    DATA[key] = el.value;
-    saveData();
-    applyDataSoft(key);
-  };
-  el.addEventListener('input', handler);
-  el.addEventListener('change', handler);
-});
-
-function applyDataSoft(changedKey){
-  document.querySelectorAll(`[data-f="${changedKey}"]`).forEach(el => {
-    el.textContent = DATA[changedKey];
-  });
-  document.querySelectorAll(`[data-f-src="${changedKey}"]`).forEach(el => {
-    el.src = DATA[changedKey];
-  });
-  if (changedKey === 'groomPhoto' || changedKey === 'bridePhoto'){
-    document.querySelectorAll(`[data-preview="${changedKey}"]`).forEach(el => {
-      el.src = DATA[changedKey]; el.style.display = DATA[changedKey] ? '' : 'none';
-    });
-  }
-  if (changedKey === 'weddingDateISO'){ startCountdown(); updateCalendarLink(); }
-  if (changedKey === 'mapsUrl'){
-    const mb = document.getElementById('mapBtn');
-    if (mb) mb.href = DATA.mapsUrl || '#';
-  }
-  if (changedKey === 'waNumber' || changedKey === 'waDisplay' || changedKey === 'email' || changedKey === 'emailSubject'){
-    updateWALink();
-    updateContactSection();
-  }
-  if (changedKey === 'bankCopy' || changedKey === 'giftAddress'){
-    document.querySelectorAll('.gift-copy').forEach(btn => {
-      const k = btn.getAttribute('data-copy-key');
-      btn.dataset.copy = DATA[k] || '';
+    container.querySelectorAll('.gal-slot').forEach((slot, i) => {
+      const v = (DATA.gallery || [])[i] || '';
+      const im = slot.querySelector('img');
+      im.src = v; im.style.display = v ? '' : 'none';
+      slot.querySelector('input[type=text]').value = v.startsWith('data:') ? '' : v;
     });
   }
 }
 
-/* --- Music type --- */
-document.querySelectorAll('input[name="musicType"]').forEach(r => {
-  r.addEventListener('change', () => {
-    DATA.musicType = r.value;
-    saveData();
-    updateMusicFieldVisibility();
-    applyMusic();
-  });
-});
+function setGal(i, v){
+  if (!Array.isArray(DATA.gallery)) DATA.gallery = [...DEFAULT_DATA.gallery];
+  DATA.gallery[i] = v || DEFAULT_DATA.gallery[i];
+  saveData(); applyData();
+}
 function updateMusicFieldVisibility(){
   const t = DATA.musicType || 'default';
-  document.getElementById('musicUrlField').style.display = (t === 'url') ? '' : 'none';
-  document.getElementById('musicFileField').style.display = (t === 'file') ? '' : 'none';
+  document.getElementById('musicUrlField').style.display = t === 'url' ? '' : 'none';
+  document.getElementById('musicFileField').style.display = t === 'file' ? '' : 'none';
 }
-
-/* --- Resize --- */
-async function resizeImage(file, maxW = 1200, quality = 0.82){
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxW){ height = Math.round(height * maxW / width); width = maxW; }
+function compressImage(file, max, q){
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onerror = rej;
+    fr.onload = () => {
+      const im = new Image();
+      im.onerror = rej;
+      im.onload = () => {
+        const k = Math.min(1, max / Math.max(im.width, im.height));
         const c = document.createElement('canvas');
-        c.width = width; c.height = height;
-        c.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(c.toDataURL('image/jpeg', quality));
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        res(c.toDataURL('image/jpeg', q));
       };
-      img.onerror = reject;
-      img.src = e.target.result;
+      im.src = fr.result;
     };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    fr.readAsDataURL(file);
   });
 }
-
-/* --- Photo upload --- */
-document.querySelectorAll('[data-upload]').forEach(inp => {
-  inp.addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const key = inp.getAttribute('data-upload');
-    try{
-      toast('Memproses foto...');
-      const dataUrl = await resizeImage(file);
-      DATA[key] = dataUrl;
-      saveData();
-      document.querySelector(`[data-bind="${key}"]`).value = dataUrl;
-      document.querySelectorAll(`[data-preview="${key}"]`).forEach(el => {
-        el.src = dataUrl; el.style.display = '';
-      });
-      applyDataSoft(key);
-      toast('Foto tersimpan ✓');
-    } catch(err){ toast('Gagal memproses foto'); console.error(err); }
-    inp.value = '';
-  });
-});
-
-/* --- Music file --- */
-document.getElementById('musicFile').addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try{
-    toast('Menyimpan musik...');
-    await IDB.put('music', file);
-    DATA.musicType = 'file';
-    saveData();
-    await applyMusic();
-    toast('Musik tersimpan ✓');
-  } catch(err){ toast('Gagal menyimpan musik'); console.error(err); }
-  e.target.value = '';
-});
-
-/* --- Test music --- */
-document.getElementById('musicTest').addEventListener('click', async () => {
-  await applyMusic();
-  try{
-    await musicEl.play();
-    musicOn = true; setMusicUI();
-    toast('▶ Memutar musik...');
-    setTimeout(() => { musicEl.pause(); musicOn = false; setMusicUI(); }, 4000);
-  } catch(e){ toast('Gagal memutar musik'); }
-});
-
-/* --- Export / Import / Reset --- */
-document.getElementById('adminExport').addEventListener('click', () => {
-  const dataStr = JSON.stringify(DATA, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `undangan-backup-${Date.now()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('Backup diunduh ✓');
-});
-
-document.getElementById('adminImport').addEventListener('click', () => {
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = '.json,application/json';
-  inp.addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try{
-      const text = await file.text();
-      const obj = JSON.parse(text);
-      DATA = { ...DEFAULT_DATA, ...obj };
-      saveData();
-      applyData();
-      toast('Data berhasil diimpor ✓');
-    } catch(err){ toast('File tidak valid'); console.error(err); }
-  });
-  inp.click();
-});
-
-document.getElementById('adminReset').addEventListener('click', async () => {
-  if (!confirm('Reset semua pengaturan ke default? Data yang tersimpan akan hilang.')) return;
-  try{ localStorage.removeItem(LS_KEY); }catch(e){}
-  try{ await IDB.del('music'); }catch(e){}
-  DATA = { ...DEFAULT_DATA };
-  applyData();
-  toast('Data direset ✓');
-});
-
-/* ============================================================
-   20. GALLERY RENDER
-   ============================================================ */
 function renderGallery(){
-  const gal = document.getElementById('galGrid');
-  if (!gal) return;
-  gal.innerHTML = '';
+  const g = document.getElementById('galGrid');
+  g.innerHTML = '';
   (DATA.gallery || []).forEach((src, i) => {
     if (!src) return;
-    const div = document.createElement('div');
-    div.className = 'gal-item';
-    const img = document.createElement('img');
-    img.src = src; img.alt = 'Galeri ' + (i+1); img.loading = 'lazy';
-    div.appendChild(img); gal.appendChild(div);
+    const d = document.createElement('div');
+    d.className = 'gal-item';
+    d.style.setProperty('--i', i);
+    d.innerHTML = '<img loading="lazy" alt="Galeri ' + (i + 1) + '"><span class="gal-zoom"><svg class="ic"><use href="#i-expand"/></svg></span>';
+    d.firstChild.src = src;
+    g.appendChild(d);
   });
   bindLightbox();
 }
 
 /* ============================================================
-   21. INIT
+   20. ADMIN: handler form, upload, musik, ekspor/impor/reset
+   ============================================================ */
+function initAdmin(){
+  document.querySelectorAll('[data-bind]').forEach(el => el.addEventListener('change', () => {
+    DATA[el.getAttribute('data-bind')] = el.value.trim(); saveData(); applyData();
+  }));
+  document.querySelectorAll('[data-upload]').forEach(inp => inp.addEventListener('change', async () => {
+    const f = inp.files[0]; if (!f) return;
+    try{ DATA[inp.dataset.upload] = await compressImage(f, 600, .82); saveData(); applyData(); toast('Foto tersimpan'); }
+    catch(e){ toast('Gagal membaca foto'); }
+    inp.value = '';
+  }));
+  document.querySelectorAll('input[name="musicType"]').forEach(r => r.addEventListener('change', () => {
+    if (!r.checked) return;
+    DATA.musicType = r.value; saveData(); updateMusicFieldVisibility(); applyMusic();
+  }));
+  document.getElementById('musicFile').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    if (f.size > 15 * 1048576){ toast('File terlalu besar (maks 15 MB)'); return; }
+    try{ await IDB.put('music', f); DATA.musicType = 'file'; saveData(); syncAdminForm(); applyMusic(); toast('Musik tersimpan'); }
+    catch(err){ toast('Gagal menyimpan musik'); }
+  });
+  document.getElementById('musicTest').addEventListener('click', () => {
+    if (musicEl.paused) musicEl.play().then(() => { musicOn = true; setMusicUI(); }).catch(() => toast('Musik tidak bisa diputar'));
+    else { musicEl.pause(); musicOn = false; setMusicUI(); }
+  });
+  document.getElementById('adminExport').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' }));
+    a.download = 'undangan-data.json'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  document.getElementById('adminImport').addEventListener('click', () => {
+    const i = document.createElement('input'); i.type = 'file'; i.accept = 'application/json';
+    i.onchange = async () => {
+      try{ DATA = { ...DEFAULT_DATA, ...JSON.parse(await i.files[0].text()) }; saveData(); applyData(); toast('Data diimpor'); }
+      catch(e){ toast('File tidak valid'); }
+    };
+    i.click();
+  });
+  document.getElementById('adminReset').addEventListener('click', () => {
+    if (!confirm('Kembalikan semua pengaturan ke bawaan?')) return;
+    try{ localStorage.removeItem(LS_KEY); }catch(e){}
+    DATA = { ...DEFAULT_DATA }; applyData(); toast('Pengaturan dikembalikan');
+  });
+}
+
+/* ============================================================
+   21. EFEK INTERAKTIF
+   ============================================================ */
+const fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
+const calm = matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+function setNum(el, v){
+  if (el.textContent === v) return;
+  el.textContent = v;
+  el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');
+}
+function enhance(){
+  const seal = document.getElementById('envSeal');
+  if (seal) seal.textContent = ((DATA.groomShort || 'T')[0] + '&' + (DATA.brideShort || 'M')[0]).toUpperCase();
+  document.querySelectorAll('.hero-names span[data-f]').forEach(sp => {
+    if (sp.querySelector('.ch')) return;
+    const t = sp.textContent; sp.setAttribute('aria-label', t); sp.textContent = '';
+    [...t].forEach((c, i) => { const x = document.createElement('span'); x.className = 'ch'; x.setAttribute('aria-hidden', 'true'); x.style.setProperty('--ci', i); x.textContent = c; sp.appendChild(x); });
+  });
+  const g0 = (DATA.gallery || [])[0];
+  document.getElementById('heroBg').style.backgroundImage = g0 ? 'url("' + g0.replace(/"/g, '%22') + '")' : 'none';
+}
+function dust(cv, n){
+  if (!cv || calm) return;
+  const x = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2), ps = [];
+  let w, h, on = true;
+  const size = () => { const r = cv.getBoundingClientRect(); w = cv.width = r.width * dpr; h = cv.height = r.height * dpr; };
+  size(); addEventListener('resize', size);
+  for (let i = 0; i < n; i++) ps.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.5 + .4, v: Math.random() * .00022 + .00008, s: Math.random() * 6, a: Math.random() * .5 + .25 });
+  new IntersectionObserver(e => { on = e[0].isIntersecting; }).observe(cv);
+  (function f(t){
+    if (on){
+      x.clearRect(0, 0, w, h);
+      ps.forEach(p => {
+        p.y -= p.v * 16; if (p.y < -.02) p.y = 1.02;
+        x.beginPath(); x.arc((p.x + Math.sin(t / 2600 + p.s) * .012) * w, p.y * h, p.r * dpr, 0, 6.283);
+        x.fillStyle = 'rgba(201,162,75,' + p.a * (.6 + .4 * Math.sin(t / 900 + p.s)) + ')'; x.fill();
+      });
+    }
+    requestAnimationFrame(f);
+  })(0);
+}
+function burst(el){
+  if (calm) return;
+  const r = el.getBoundingClientRect();
+  for (let i = 0; i < 22; i++){
+    const p = document.createElement('i'); p.className = 'spark';
+    p.style.left = (r.left + r.width / 2) + 'px'; p.style.top = (r.top + r.height / 2) + 'px';
+    document.body.appendChild(p);
+    const a = Math.random() * 6.283, d = 50 + Math.random() * 90;
+    p.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + Math.cos(a) * d + 'px,' + Math.sin(a) * d + 'px) scale(0)', opacity: 0 }], { duration: 900 + Math.random() * 500, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => p.remove();
+  }
+}
+function tilt(el, max){
+  el.addEventListener('pointermove', e => {
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--rx', (-((e.clientY - r.top) / r.height - .5) * max) + 'deg');
+    el.style.setProperty('--ry', (((e.clientX - r.left) / r.width - .5) * max) + 'deg');
+  });
+  el.addEventListener('pointerleave', () => { el.style.setProperty('--rx', '0deg'); el.style.setProperty('--ry', '0deg'); });
+}
+function initFx(){
+  dust(document.getElementById('dustCover'), 34);
+  dust(document.getElementById('dustHero'), 26);
+  document.querySelectorAll('.person,.event-card,.gift-card,.contact-card,.cd-box').forEach(el => {
+    el.classList.add('spot');
+    el.addEventListener('pointermove', e => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', (e.clientX - r.left) + 'px'); el.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+  if (fine && !calm){
+    tilt(envelope, 14);
+    document.querySelectorAll('.avatar').forEach(a => tilt(a, 12));
+    document.querySelectorAll('.btn,.submit-btn').forEach(b => {
+      b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.translate = ((e.clientX - r.left - r.width / 2) * .12) + 'px ' + ((e.clientY - r.top - r.height / 2) * .22) + 'px'; });
+      b.addEventListener('pointerleave', () => { b.style.translate = ''; });
+    });
+  }
+  document.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.btn,.submit-btn,.gift-copy,.mini-btn,.pwd-btns button,.seg button');
+    if (!b || calm) return;
+    const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2, i = document.createElement('i');
+    i.className = 'rip';
+    i.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
+    b.appendChild(i); setTimeout(() => i.remove(), 650);
+  });
+  const homeEl = document.getElementById('home'), tlEl = document.querySelector('.timeline');
+  const fx = () => {
+    if (scrollY < innerHeight * 1.5) homeEl.style.setProperty('--sy', scrollY);
+    if (tlEl){
+      const r = tlEl.getBoundingClientRect();
+      tlEl.style.setProperty('--tl', Math.min(1, Math.max(0, (innerHeight * .7 - r.top) / r.height)));
+      tlEl.querySelectorAll('.tl-item').forEach(it => it.classList.toggle('on', it.getBoundingClientRect().top < innerHeight * .72));
+    }
+  };
+  addEventListener('scroll', () => requestAnimationFrame(fx), { passive: true }); fx();
+  const sel = document.getElementById('rAttend'), segs = document.querySelectorAll('.seg button');
+  segs.forEach(b => b.addEventListener('click', () => { sel.value = b.dataset.v; segs.forEach(x => x.setAttribute('aria-checked', x === b)); }));
+  form.addEventListener('reset', () => segs.forEach(x => x.setAttribute('aria-checked', 'false')));
+  document.querySelectorAll('[data-step]').forEach(b => b.addEventListener('click', () => {
+    const i = document.getElementById('rGuests'); i.value = Math.min(10, Math.max(1, (+i.value || 1) + (+b.dataset.step)));
+  }));
+}
+
+/* ============================================================
+   22. INIT
    ============================================================ */
 loadData();
+initAdmin();
+initFx();
 applyData();
-revealCheck();
 
 })();
 </script>
