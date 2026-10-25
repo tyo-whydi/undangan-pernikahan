@@ -1089,7 +1089,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(201,162,75,.12
 /* ============================================================
    PASSWORD PANEL ADMIN — GANTI DI SINI
    ============================================================ */
-const OWNER_PASSWORD = 'tiyo2026';
+const OWNER_PASSWORD = 'tiyo2026';   // hanya dipakai bila API_URL kosong (mode lokal)
+/* Tempel URL Web App Apps Script (berakhiran /exec) di sini. Dengan ini, semua perubahan admin
+   tersimpan di server dan tampil di semua perangkat. */
+const API_URL = '';
 
 /* ============================================================
    1. DATA DEFAULT — (Bagian ini yang akan diupdate oleh tombol Sync)
@@ -1218,6 +1221,7 @@ function loadData(){
   } catch(e){ console.warn('Gagal load data:', e); }
 }
 function saveData(){
+  pushSoon();
   try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }
   catch(e){ toast('Penyimpanan penuh'); console.warn(e); }
 }
@@ -1282,6 +1286,7 @@ async function applyMusic(){
       else src = DEFAULT_MUSIC;
     } catch(e){ src = DEFAULT_MUSIC; }
   }
+  if (src && musicEl.getAttribute('src') === src) return;
   musicEl.src = src;
   musicEl.load();
 
@@ -1627,7 +1632,7 @@ form.addEventListener('submit', async e => {
     dateStyle: 'full', timeStyle: 'short', timeZone: 'Asia/Jakarta'
   });
 
-  const hasSheet = !!DATA.scriptURL;
+  const hasSheet = !!(API_URL || DATA.scriptURL);
   const hasEmail = !!DATA.email;
 
   if (!hasSheet && !hasEmail){
@@ -1644,11 +1649,11 @@ form.addEventListener('submit', async e => {
 
   if (hasSheet){
     try {
-      await fetch(DATA.scriptURL, {
+      await fetch(API_URL || DATA.scriptURL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ name, attend, guests, message: msg, time: timeStr })
+        body: JSON.stringify({ action: 'rsvp', name, attend, guests, message: msg, time: timeStr })
       });
       sheetOK = true;
     } catch (err){
@@ -1741,7 +1746,7 @@ const pwdCancel = document.getElementById('pwdCancel');
 const SESSION_UNLOCK_KEY = 'undangan-unlocked-session';
 
 function isUnlocked(){
-  try{ return sessionStorage.getItem(SESSION_UNLOCK_KEY) === '1'; }
+  try{ return sessionStorage.getItem(SESSION_UNLOCK_KEY) === '1' && (!API_URL || !!adminPw); }
   catch(e){ return false; }
 }
 function setUnlocked(v){
@@ -1785,11 +1790,19 @@ function closePwd(){
 pwdCancel.addEventListener('click', closePwd);
 pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') pwdOk.click(); });
 
-pwdOk.addEventListener('click', () => {
+pwdOk.addEventListener('click', async () => {
   const val = pwdInput.value.trim();
   if (!val){ pwdErr.textContent = 'Kata sandi tidak boleh kosong.'; return; }
 
-  if (val === OWNER_PASSWORD){
+  let ok = API_URL ? false : (val === OWNER_PASSWORD);
+  if (API_URL){
+    pwdOk.disabled = true; pwdErr.textContent = 'Memeriksa...';
+    try{ const j = await api({ action: 'check', pw: val }); ok = !!j.ok; }
+    catch(e){ pwdErr.textContent = 'Tidak bisa terhubung ke server.'; pwdOk.disabled = false; return; }
+    pwdOk.disabled = false; pwdErr.textContent = '';
+    if (ok){ adminPw = val; try{ sessionStorage.setItem('undangan-pw', val); }catch(e){} }
+  }
+  if (ok){
     failedAttempts = 0;
     setUnlocked(true);
     closePwd();
@@ -1826,12 +1839,12 @@ adminToggle.addEventListener('click', () => {
 document.getElementById('adminClose').addEventListener('click', () => adminPanel.classList.remove('open'));
 document.getElementById('adminDone').addEventListener('click', () => {
   adminPanel.classList.remove('open');
-  toast('Pengaturan tersimpan');
+  if (API_URL) pushNow(); else toast('Pengaturan tersimpan');
 });
 document.getElementById('adminLock').addEventListener('click', () => {
   setUnlocked(false);
   adminPanel.classList.remove('open');
-  toast('Panel dikunci');
+  adminPw = ''; try{ sessionStorage.removeItem('undangan-pw'); }catch(e){} toast('Panel dikunci');
 });
 
 /* --- Tema: handler radio --- */
@@ -1892,7 +1905,7 @@ function syncAdminForm(){
         slot.querySelector('input[type=text]').addEventListener('change', e => setGal(i, e.target.value.trim()));
         slot.querySelector('input[type=file]').addEventListener('change', async e => {
           const f = e.target.files[0]; if (!f) return;
-          try{ setGal(i, await compressImage(f, 1000, .8)); toast('Foto tersimpan'); }
+          try{ setGal(i, await putImage(f, 1000, .8)); toast('Foto tersimpan'); }
           catch(err){ toast('Gagal membaca foto'); }
           e.target.value = '';
         });
@@ -1961,7 +1974,7 @@ function initAdmin(){
   }));
   document.querySelectorAll('[data-upload]').forEach(inp => inp.addEventListener('change', async () => {
     const f = inp.files[0]; if (!f) return;
-    try{ DATA[inp.dataset.upload] = await compressImage(f, 600, .82); saveData(); applyData(); toast('Foto tersimpan'); }
+    try{ DATA[inp.dataset.upload] = await putImage(f, 600, .82); saveData(); applyData(); toast('Foto tersimpan'); }
     catch(e){ toast('Gagal membaca foto'); }
     inp.value = '';
   }));
@@ -1971,8 +1984,15 @@ function initAdmin(){
   }));
   document.getElementById('musicFile').addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
-    if (f.size > 15 * 1048576){ toast('File terlalu besar (maks 15 MB)'); return; }
-    try{ await IDB.put('music', f); DATA.musicType = 'file'; saveData(); syncAdminForm(); applyMusic(); toast('Musik tersimpan'); }
+    const lim = API_URL ? 6 : 15; if (f.size > lim * 1048576){ toast('File terlalu besar (maks ' + lim + ' MB)'); return; }
+    try{
+      if (API_URL && adminPw){
+        toast('Mengunggah musik...');
+        const j = await api({ action: 'upload', pw: adminPw, name: f.name, mime: f.type || 'audio/mpeg', b64: await fileB64(f) });
+        if (!j.ok) throw new Error(j.error);
+        DATA.musicType = 'url'; DATA.musicUrl = j.url;
+      } else { await IDB.put('music', f); DATA.musicType = 'file'; }
+      saveData(); syncAdminForm(); applyMusic(); toast('Musik tersimpan'); }
     catch(err){ toast('Gagal menyimpan musik'); }
   });
   document.getElementById('musicTest').addEventListener('click', () => {
@@ -2106,12 +2126,54 @@ function initFx(){
 }
 
 /* ============================================================
+   21b. SINKRONISASI SERVER (Apps Script)
+   ============================================================ */
+let adminPw = '';
+try{ adminPw = sessionStorage.getItem('undangan-pw') || ''; }catch(e){}
+async function api(body){
+  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  return r.json();
+}
+let pushT = null;
+function pushSoon(){ if (!API_URL || !adminPw) return; clearTimeout(pushT); pushT = setTimeout(pushNow, 900); }
+async function pushNow(){
+  if (!API_URL || !adminPw) return;
+  try{
+    const j = await api({ action: 'save', pw: adminPw, data: DATA });
+    toast(!j.ok ? (j.error || 'Gagal menyimpan') : (j.skipped && j.skipped.length ? 'Tersimpan, sebagian foto terlalu besar. Upload ulang.' : 'Tersimpan ke server'));
+  }catch(e){ toast('Gagal menyimpan, periksa koneksi'); }
+}
+async function pullRemote(){
+  if (!API_URL) return;
+  try{
+    const j = await (await fetch(API_URL + '?action=config&t=' + Date.now())).json();
+    if (j.ok && j.data && Object.keys(j.data).length){
+      DATA = { ...DEFAULT_DATA, ...j.data };
+      if (!Array.isArray(DATA.gallery) || DATA.gallery.length < 5) DATA.gallery = [...DEFAULT_DATA.gallery];
+      try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){}
+      applyData();
+    }
+  }catch(e){ console.warn('Gagal mengambil data server', e); }
+}
+async function putImage(file, max, q){
+  const d = await compressImage(file, max, q);
+  if (!API_URL || !adminPw) return d;
+  toast('Mengunggah foto...');
+  const j = await api({ action: 'upload', pw: adminPw, name: 'foto-' + Date.now() + '.jpg', mime: 'image/jpeg', b64: d.split(',')[1] });
+  if (!j.ok) throw new Error(j.error);
+  return j.url;
+}
+function fileB64(f){ return new Promise((res, rej) => { const r = new FileReader(); r.onerror = rej; r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(f); }); }
+
+/* ============================================================
    22. INIT
    ============================================================ */
 loadData();
 initAdmin();
 initFx();
 applyData();
+pullRemote();
+if (API_URL) document.getElementById('adminSync').style.display = 'none';
 
 })();
 </script>
