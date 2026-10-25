@@ -1906,7 +1906,7 @@ function syncAdminForm(){
         slot.querySelector('input[type=file]').addEventListener('change', async e => {
           const f = e.target.files[0]; if (!f) return;
           try{ setGal(i, await putImage(f, 1000, .8)); toast('Foto tersimpan'); }
-          catch(err){ toast('Gagal membaca foto'); }
+          catch(err){ console.error(err); toast('Gagal: ' + ((err && err.message) || 'tidak diketahui')); }
           e.target.value = '';
         });
         container.appendChild(slot);
@@ -1934,10 +1934,10 @@ function updateMusicFieldVisibility(){
 function compressImage(file, max, q){
   return new Promise((res, rej) => {
     const fr = new FileReader();
-    fr.onerror = rej;
+    fr.onerror = () => rej(new Error('File tidak bisa dibaca'));
     fr.onload = () => {
       const im = new Image();
-      im.onerror = rej;
+      im.onerror = () => rej(new Error('Format foto tidak didukung, pakai JPG/PNG'));
       im.onload = () => {
         const k = Math.min(1, max / Math.max(im.width, im.height));
         const c = document.createElement('canvas');
@@ -1975,7 +1975,7 @@ function initAdmin(){
   document.querySelectorAll('[data-upload]').forEach(inp => inp.addEventListener('change', async () => {
     const f = inp.files[0]; if (!f) return;
     try{ DATA[inp.dataset.upload] = await putImage(f, 600, .82); saveData(); applyData(); toast('Foto tersimpan'); }
-    catch(e){ toast('Gagal membaca foto'); }
+    catch(e){ console.error(e); toast('Gagal: ' + ((e && e.message) || 'tidak diketahui')); }
     inp.value = '';
   }));
   document.querySelectorAll('input[name="musicType"]').forEach(r => r.addEventListener('change', () => {
@@ -2131,8 +2131,11 @@ function initFx(){
 let adminPw = '';
 try{ adminPw = sessionStorage.getItem('undangan-pw') || ''; }catch(e){}
 async function api(body){
-  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
-  return r.json();
+  let t;
+  try{ t = await (await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })).text(); }
+  catch(e){ throw new Error('Tidak bisa terhubung ke server. Cek URL /exec dan akses deployment'); }
+  try{ return JSON.parse(t); }
+  catch(e){ throw new Error('Server error. Jalankan setup lalu deploy ulang (Versi baru)'); }
 }
 let pushT = null;
 function pushSoon(){ if (!API_URL || !adminPw) return; clearTimeout(pushT); pushT = setTimeout(pushNow, 900); }
